@@ -3,5 +3,6 @@
         "qiskit",
         "qobj",
         "statevector"
-    ]
+    ],
+    "commentTranslate.source": "Google"
 }

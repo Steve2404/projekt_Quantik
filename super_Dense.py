@@ -12,7 +12,7 @@ circuit = q.QuantumCircuit(2, 2)
 circuit.h(0)
 circuit.cx(0,1)
 
-msg_alice = '00' # choice: 00 01 10 11
+msg_alice = '00' # choix: 00 01 10 11
 
 # encoding msg
 if msg_alice == '00':
@@ -34,7 +34,7 @@ circuit.measure([0,1], [0,1])
 print(circuit.draw(output='text'))
 
 # execution
-job = simulator.run(transpile(circuit, simulator), shots=1000)
+job = simulator.run(transpile(circuit, simulator), shots=1)
 result = job.result()
 
 # counting
