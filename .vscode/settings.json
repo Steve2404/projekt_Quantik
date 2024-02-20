@@ -4,5 +4,6 @@
         "qobj",
         "statevector"
     ],
-    "commentTranslate.source": "Google"
+    "commentTranslate.source": "Google",
+    "CodeGPT.apiKey": "CodeGPT Plus Beta"
 }
