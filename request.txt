@@ -1,13 +1,9 @@
-Die Implementierung des BB84-Protokolls unter Verwendung eines Quantencomputersimulators wurde durch einige Fehler und Probleme im Implementierungscode beeinträchtigt.
-
-
-
 
 -> en tant que expert en cryptographie post quantique et quantique tu dois realiser un systeme et le code qui permet tout d abord de mettre en place un systeme de communication securise entre Alice et bob. Plus tard introduire Eve qui est une espionne et enfin rendre cette communication de plusieurs a plusieurs. Tout ceci en se servant d un systeme de QKD
 --> peux tu le faire etape par etape
 
 --> tu ne fais pas un systeme de gestion de cle quantique
---> je compte me servi du cloud, car ibm met a dispostion des machhine quantique, je compte utilise pour cree un canal quantique entre Alice et Bob. J ai raison ? si c est vrai peut tu ecrire le code python qui permet de faire ca ? et plus tard integre le protocole bb84
+--> je compte me servi du cloud, car ibm met a dispostion des machhine quantique, je compte utilise pour cree un canal quantique entre Alice et Bob. peux tu ecrire le code python qui permet de faire ca ? et plus tard integre le protocole bb84
 --> peux tu proposer une architecture
 --> peux tu m aider a realiser chaque etape ou chaque bloc
 --> comment faire si je dois realiser cela en vrai dans une petite application web d authentification
