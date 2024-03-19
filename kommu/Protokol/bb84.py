@@ -1,10 +1,13 @@
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
+from qiskit_ibm_provider import IBMProvider
 import qiskit_aer as qe
 import numpy as np
 
 def prepare_qubits(bits, bases):
     """Alice prepares the qubits"""
+    IBMProvider.save_account('356c98ef861f7b5562320e3782b24ac7f0a7f2990b93038fb7e19a1a0ec422e0785152bb4ad77b0fdc6b7df3b977ff03ce6ec663b41e9b37429f064eb9d185bf', overwrite=True)
+
     qc = QuantumCircuit(len(bits), len(bases))
     for i in range(len(bits)): 
         if bits[i] == 1: # Apply Gate X if the bit is 1 to put it in the state |1>
@@ -38,38 +41,55 @@ def bob_measure(qc, bases):
     for i in range(len(bases)):
         qc.measure(i, i)
     return qc
+
+def calculate_parity(bits):
+    """Calcule la parité d'une liste de bits. Renvoie 0 si la parité est paire, sinon 1."""
+    return sum(bits) % 2
+
     
 # simulation parameter
-nb_bits = 20
+nb_bits = 8
 alice_bits = np.random.randint(2, size=nb_bits)
 alice_basis = np.random.randint(2, size=nb_bits)
 bob_basis = np.random.randint(2, size=nb_bits)
 eve_basis = np.random.randint(2, size=nb_bits)
 
 
-# preparation for interception
+# preparation qc
 qc = prepare_qubits(alice_bits, alice_basis)
 #qc = intercept_measure(qc, eve_basis) # Eve interception
 qc = bob_measure(qc, bob_basis) # measure by Bob
 
+print(qc.draw())
+
+provider = IBMProvider()
+
 # Execution of the circuit
-simulation = qe.Aer.get_backend('qasm_simulator')
-job = simulation.run(transpile(qc, simulation), shots=1, memory=True)
-result = job.result()
+simulator = provider.get_backend('simulator_mps')
+job = simulator.run(transpile(qc, simulator), shots=1, memory=True)
+job_id = job.job_id()
+retrieved_job = provider.retrieve_job(job_id)
+result = retrieved_job.result()
 measurements = result.get_memory()[0]
+
+
+# simulation = qe.Aer.get_backend('qasm_simulator')
+# job = simulation.run(transpile(qc, simulation), shots=1, memory=True)
+# result = job.result()
+# measurements = result.get_memory()[0]
 
 key_alice_bob = [
     int(measurements[i])
     for i in range(nb_bits)
     if alice_basis[i] == bob_basis[i]
 ]
-print(key_alice_bob)
+print(f"Cle entre la base Alice-Bob: {key_alice_bob}")
 print(f"bob bit  : {measurements}")
 print(f"alice bit: {alice_bits}")
 
 # Estimation du QBER (simplifié ici pour l'exemple)
 
-x_bits_to_check = 4
+x_bits_to_check = 3
 matching_indices = [i for i in range(nb_bits) if alice_basis[i] == bob_basis[i]]
 check_indices = np.random.choice(matching_indices, x_bits_to_check, replace=False)
 
@@ -90,6 +110,13 @@ bob_check_bits = [
     if alice_basis[i] == bob_basis[i]
 ]
 
+# Ajout d'une etape de vérification d'erreur 
+
+parity_check_result = calculate_parity(key_alice_bob)
+if parity_check_result != 0:
+    print("Une erreur a été détectée dans la clé.")
+else:
+    print("Aucune erreur détectée dans la clé.")
 
 # Calcul du QBER
 errors = sum(
@@ -119,6 +146,20 @@ final_key = [bit
              if i not in check_indices]
 
 print(f"Final shared key: {final_key}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 """
 
