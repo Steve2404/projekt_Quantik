@@ -16,11 +16,12 @@ def client(conn, addr):
         try:
             # Reception des donnees
             data = conn.recv(4096).decode()
+            print(data)
             if not data: 
                 break
 
             # identifier le client et traiter le message
-            if data.startswith('Alice') or data.startswith('Bob'):
+            if data.startswith('Alice:') or data.startswith('Bob:'):
                 client_name = data.split(":")[0]
                 client_data[client_name]['conn'] = conn
                 if client_name == 'Alice':
@@ -51,7 +52,7 @@ def client(conn, addr):
     
 def server():
     host = 'localhost'
-    port = 505040
+    port = 655
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((host, port))
     server_socket.listen(2)

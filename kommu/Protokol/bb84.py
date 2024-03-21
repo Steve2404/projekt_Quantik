@@ -46,31 +46,32 @@ def calculate_parity(bits):
     """Calcule la parité d'une liste de bits. Renvoie 0 si la parité est paire, sinon 1."""
     return sum(bits) % 2
 
+if __name__ == '__main__':
     
-# simulation parameter
-nb_bits = 8
-alice_bits = np.random.randint(2, size=nb_bits)
-alice_basis = np.random.randint(2, size=nb_bits)
-bob_basis = np.random.randint(2, size=nb_bits)
-eve_basis = np.random.randint(2, size=nb_bits)
+    # simulation parameter
+    nb_bits = 8
+    alice_bits = np.random.randint(2, size=nb_bits)
+    alice_basis = np.random.randint(2, size=nb_bits)
+    bob_basis = np.random.randint(2, size=nb_bits)
+    eve_basis = np.random.randint(2, size=nb_bits)
 
 
-# preparation qc
-qc = prepare_qubits(alice_bits, alice_basis)
-#qc = intercept_measure(qc, eve_basis) # Eve interception
-qc = bob_measure(qc, bob_basis) # measure by Bob
+    # preparation qc
+    qc = prepare_qubits(alice_bits, alice_basis)
+    #qc = intercept_measure(qc, eve_basis) # Eve interception
+    qc = bob_measure(qc, bob_basis) # measure by Bob
 
-print(qc.draw())
+    print(qc.draw())
 
-provider = IBMProvider()
+    provider = IBMProvider()
 
-# Execution of the circuit
-simulator = provider.get_backend('simulator_mps')
-job = simulator.run(transpile(qc, simulator), shots=1, memory=True)
-job_id = job.job_id()
-retrieved_job = provider.retrieve_job(job_id)
-result = retrieved_job.result()
-measurements = result.get_memory()[0]
+    # Execution of the circuit
+    simulator = provider.get_backend('simulator_mps')
+    job = simulator.run(transpile(qc, simulator), shots=1, memory=True)
+    job_id = job.job_id()
+    retrieved_job = provider.retrieve_job(job_id)
+    result = retrieved_job.result()
+    measurements = result.get_memory()[0]
 
 
 # simulation = qe.Aer.get_backend('qasm_simulator')
@@ -78,74 +79,74 @@ measurements = result.get_memory()[0]
 # result = job.result()
 # measurements = result.get_memory()[0]
 
-key_alice_bob = [
-    int(measurements[i])
-    for i in range(nb_bits)
-    if alice_basis[i] == bob_basis[i]
-]
-print(f"Cle entre la base Alice-Bob: {key_alice_bob}")
-print(f"bob bit  : {measurements}")
-print(f"alice bit: {alice_bits}")
+    key_alice_bob = [
+        int(measurements[i])
+        for i in range(nb_bits)
+        if alice_basis[i] == bob_basis[i]
+    ]
+    print(f"Cle entre la base Alice-Bob: {key_alice_bob}")
+    print(f"bob bit  : {measurements}")
+    print(f"alice bit: {alice_bits}")
 
-# Estimation du QBER (simplifié ici pour l'exemple)
+    # Estimation du QBER (simplifié ici pour l'exemple)
 
-x_bits_to_check = 3
-matching_indices = [i for i in range(nb_bits) if alice_basis[i] == bob_basis[i]]
-check_indices = np.random.choice(matching_indices, x_bits_to_check, replace=False)
+    x_bits_to_check = 3
+    matching_indices = [i for i in range(nb_bits) if alice_basis[i] == bob_basis[i]]
+    check_indices = np.random.choice(matching_indices, x_bits_to_check, replace=False)
 
-print(f"matching_indices: {matching_indices}")
-print(f"Alice Base: {alice_basis}")
-print(f"BOB   Base: {bob_basis}")
-print(f"indice Selectionne: {check_indices}")
+    print(f"matching_indices: {matching_indices}")
+    print(f"Alice Base: {alice_basis}")
+    print(f"BOB   Base: {bob_basis}")
+    print(f"indice Selectionne: {check_indices}")
 
-alice_check_bits = [
-    alice_bits[i] 
-    for i in check_indices 
-    if alice_basis[i] == bob_basis[i]
-]
-
-bob_check_bits = [
-    int(measurements[i])
-    for i in check_indices
-    if alice_basis[i] == bob_basis[i]
-]
-
-# Ajout d'une etape de vérification d'erreur 
-
-parity_check_result = calculate_parity(key_alice_bob)
-if parity_check_result != 0:
-    print("Une erreur a été détectée dans la clé.")
-else:
-    print("Aucune erreur détectée dans la clé.")
-
-# Calcul du QBER
-errors = sum(
-    alice_check_bits[i] != bob_check_bits[i]
-    for i in range(len(alice_check_bits))
-)
-try:
-    qber = errors / len(alice_check_bits)
-except ZeroDivisionError:
-    print("Impossible : division by zero")
+    alice_check_bits = [
+        alice_bits[i] 
+        for i in check_indices 
+        if alice_basis[i] == bob_basis[i]
+    ]
     
-
-print(f"Alice's bit for verification: {alice_check_bits}")
-print(f"Bob's bit for verification: {bob_check_bits}")
-
-print(f"QBER: {qber}")
-
-# Décision basée sur le QBER
-if qber > 0.2: # Seuil hypothétique de tolérance au QBER
-    print("Interception détectée, abandonner la clé.")
-else:
-    print("La clé est sûre, procéder à la distillation de la clé.")
-
-# Alice and Bob exclude the verified bits from their final secret key
-final_key = [bit 
-             for i, bit in enumerate(key_alice_bob)
-             if i not in check_indices]
-
-print(f"Final shared key: {final_key}")
+    bob_check_bits = [
+        int(measurements[i])
+        for i in check_indices
+        if alice_basis[i] == bob_basis[i]
+    ]
+    
+    # Ajout d'une etape de vérification d'erreur 
+    
+    parity_check_result = calculate_parity(key_alice_bob)
+    if parity_check_result != 0:
+        print("Une erreur a été détectée dans la clé.")
+    else:
+        print("Aucune erreur détectée dans la clé.")
+    
+    # Calcul du QBER
+    errors = sum(
+        alice_check_bits[i] != bob_check_bits[i]
+        for i in range(len(alice_check_bits))
+    )
+    try:
+        qber = errors / len(alice_check_bits)
+    except ZeroDivisionError:
+        print("Impossible : division by zero")
+        
+    
+    print(f"Alice's bit for verification: {alice_check_bits}")
+    print(f"Bob's bit for verification: {bob_check_bits}")
+    
+    print(f"QBER: {qber}")
+    
+    # Décision basée sur le QBER
+    if qber > 0.2: # Seuil hypothétique de tolérance au QBER
+        print("Interception détectée, abandonner la clé.")
+    else:
+        print("La clé est sûre, procéder à la distillation de la clé.")
+    
+    # Alice and Bob exclude the verified bits from their final secret key
+    final_key = [bit 
+                 for i, bit in enumerate(key_alice_bob)
+                 if i not in check_indices]
+    
+    print(f"Final shared key: {final_key}")
 
 
 

@@ -3,8 +3,8 @@ from bb84 import bob_measure
 from qiskit import QuantumCircuit
 import numpy as np
 
-def bob():
-    host, port = 'localhost', 505040
+def bob():  # sourcery skip: extract-method
+    host, port = 'localhost', 655
     nb_bits = 8
     bob_basis = np.random.randint(2, size=nb_bits)
     
