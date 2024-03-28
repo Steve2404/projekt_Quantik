@@ -8,7 +8,6 @@ def prepare_qubits(bits, bases):
     """Alice prepares the qubits"""
     IBMProvider.save_account('356c98ef861f7b5562320e3782b24ac7f0a7f2990b93038fb7e19a1a0ec422e0785152bb4ad77b0fdc6b7df3b977ff03ce6ec663b41e9b37429f064eb9d185bf', overwrite=True)
 
-    # we add 2 qubits for error detection and correction ... (later)
     
     qc = QuantumCircuit(len(bits), len(bases))
     for i in range(len(bits)): 
@@ -16,17 +15,7 @@ def prepare_qubits(bits, bases):
             qc.x(i)
         if bases[i] == 1: # Diagonale Basis
             qc.h(i)
-    """"        
-    # Applying CNOT gates for error detection
-    qc.cx(0, len(bits)) # additional original first qubit control with first qubit 
-    qc.cx(1, len(bits)) # control of the first additional original qubit with second qubit
-    qc.cx(2, len(bits) + 1) # control of second additional qubit with third qubit
-    qc.barrier()
     
-    # Apply a bit-flip error to the second qubit
-    qc.x(1)
-    
-    """
     qc.barrier()
     return qc
 
@@ -50,18 +39,6 @@ def bob_measure(qc, bases):
     for i in range(len(bases)):
         qc.measure(i, i)
     
-    """
-    # error correction with CNOT and Toffoli
-    qc.cx(0, len(bases))
-    qc.cx(1, len(bases))
-    qc.cx(2, len(bases) + 1)
-    
-    # Toffoli gate that targets the original qubit if the two additional qubits are at 1
-
-    qc.ccx(len(bases), len(bases)+1, 0) 
-    
-    qc.barrier()
-    """
 
     return qc
 
