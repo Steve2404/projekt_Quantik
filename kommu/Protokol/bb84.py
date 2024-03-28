@@ -8,12 +8,25 @@ def prepare_qubits(bits, bases):
     """Alice prepares the qubits"""
     IBMProvider.save_account('356c98ef861f7b5562320e3782b24ac7f0a7f2990b93038fb7e19a1a0ec422e0785152bb4ad77b0fdc6b7df3b977ff03ce6ec663b41e9b37429f064eb9d185bf', overwrite=True)
 
+    # we add 2 qubits for error detection and correction ... (later)
+    
     qc = QuantumCircuit(len(bits), len(bases))
     for i in range(len(bits)): 
         if bits[i] == 1: # Apply Gate X if the bit is 1 to put it in the state |1>
             qc.x(i)
         if bases[i] == 1: # Diagonale Basis
             qc.h(i)
+    """"        
+    # Applying CNOT gates for error detection
+    qc.cx(0, len(bits)) # additional original first qubit control with first qubit 
+    qc.cx(1, len(bits)) # control of the first additional original qubit with second qubit
+    qc.cx(2, len(bits) + 1) # control of second additional qubit with third qubit
+    qc.barrier()
+    
+    # Apply a bit-flip error to the second qubit
+    qc.x(1)
+    
+    """
     qc.barrier()
     return qc
 
@@ -22,13 +35,9 @@ def intercept_measure(qc, bases):
     for i in range(len(bases)):
         if bases[i] == 1: # Eve chooses a basis
             qc.h(i)
-        qc.measure(i, i) # Eve measure the qubit
+        # qc.measure(i, i) # Eve measure the qubit
+        
     qc.barrier()
-    
-    # Resetting the qubits for Bob
-    for i in range(len(bases)):
-        qc.reset(i) # reset all bit into qubit |0>
-    
     return qc
 
 def bob_measure(qc, bases):
@@ -40,25 +49,45 @@ def bob_measure(qc, bases):
     
     for i in range(len(bases)):
         qc.measure(i, i)
+    
+    """
+    # error correction with CNOT and Toffoli
+    qc.cx(0, len(bases))
+    qc.cx(1, len(bases))
+    qc.cx(2, len(bases) + 1)
+    
+    # Toffoli gate that targets the original qubit if the two additional qubits are at 1
+
+    qc.ccx(len(bases), len(bases)+1, 0) 
+    
+    qc.barrier()
+    """
+
     return qc
 
 def calculate_parity(bits):
-    """Calcule la parité d'une liste de bits. Renvoie 0 si la parité est paire, sinon 1."""
+    """Calculates the parity of a list of bits. Returns 0 if parity is even, otherwise 1."""
     return sum(bits) % 2
 
 if __name__ == '__main__':
     
     # simulation parameter
-    nb_bits = 8
-    alice_bits = np.random.randint(2, size=nb_bits)
-    alice_basis = np.random.randint(2, size=nb_bits)
-    bob_basis = np.random.randint(2, size=nb_bits)
-    eve_basis = np.random.randint(2, size=nb_bits)
+    nb_bits     = 8
+    #alice_bits  = np.random.randint(2, size=nb_bits)
+    #alice_basis = np.random.randint(2, size=nb_bits)
+    #bob_basis   = np.random.randint(2, size=nb_bits)
+    eve_basis   = np.random.randint(2, size=nb_bits)
+    
+    # test manually
+    alice_bits  =  [0, 0, 0, 1, 1, 0, 1, 0]
+    alice_basis =  [1, 0, 0, 0, 1, 0, 0, 1]
+    bob_basis   =  [1, 0, 0, 0, 1, 0, 0, 1]
+    
 
 
     # preparation qc
     qc = prepare_qubits(alice_bits, alice_basis)
-    #qc = intercept_measure(qc, eve_basis) # Eve interception
+    qc = intercept_measure(qc, eve_basis) # Eve interception
     qc = bob_measure(qc, bob_basis) # measure by Bob
 
     print(qc.draw())
@@ -67,142 +96,91 @@ if __name__ == '__main__':
 
     # Execution of the circuit
     simulator = provider.get_backend('simulator_mps')
+
     job = simulator.run(transpile(qc, simulator), shots=1, memory=True)
     job_id = job.job_id()
     retrieved_job = provider.retrieve_job(job_id)
     result = retrieved_job.result()
     measurements = result.get_memory()[0]
+    
+    # invert the bits of Bob
+    bob_bits = [int(measurements[i]) for i in range(len(measurements))]
+    bob_bits.reverse()
 
 
-# simulation = qe.Aer.get_backend('qasm_simulator')
-# job = simulation.run(transpile(qc, simulation), shots=1, memory=True)
-# result = job.result()
-# measurements = result.get_memory()[0]
+    #simulation = qe.Aer.get_backend('qasm_simulator')
+    #job = simulation.run(transpile(qc, simulation), shots=1, memory=True)
+    #result = job.result()
+    #measurements = result.get_memory()[0]
 
     key_alice_bob = [
-        int(measurements[i])
+        bob_bits[i]
         for i in range(nb_bits)
         if alice_basis[i] == bob_basis[i]
     ]
-    print(f"Cle entre la base Alice-Bob: {key_alice_bob}")
-    print(f"bob bit  : {measurements}")
-    print(f"alice bit: {alice_bits}")
+    print(f"Cle between the Alice-Bob: {key_alice_bob}\nThe length: {len(key_alice_bob)}")
+    print(f"bob bit                  : {bob_bits}")
+    print(f"alice bit                : {alice_bits}") 
 
-    # Estimation du QBER (simplifié ici pour l'exemple)
+    # Estimation of QBER (simplified here for the example)
 
     x_bits_to_check = 3
     matching_indices = [i for i in range(nb_bits) if alice_basis[i] == bob_basis[i]]
     check_indices = np.random.choice(matching_indices, x_bits_to_check, replace=False)
 
     print(f"matching_indices: {matching_indices}")
-    print(f"Alice Base: {alice_basis}")
-    print(f"BOB   Base: {bob_basis}")
-    print(f"indice Selectionne: {check_indices}")
+    print(f"Alice Basis     : {alice_basis}")
+    print(f"BOB   Basis     : {bob_basis}")
+    print(f"selected index  : {check_indices}")
 
     alice_check_bits = [
         alice_bits[i] 
         for i in check_indices 
         if alice_basis[i] == bob_basis[i]
     ]
-    
+
     bob_check_bits = [
-        int(measurements[i])
+        bob_bits[i]
         for i in check_indices
         if alice_basis[i] == bob_basis[i]
     ]
-    
-    # Ajout d'une etape de vérification d'erreur 
-    
+
+    # Addition of an error checking step 
+
     parity_check_result = calculate_parity(key_alice_bob)
     if parity_check_result != 0:
-        print("Une erreur a été détectée dans la clé.")
+        print("An error has been detected in the key.")
     else:
-        print("Aucune erreur détectée dans la clé.")
-    
-    # Calcul du QBER
+        print("No error detected in the key.")
+
+    # QBER calculation
     errors = sum(
         alice_check_bits[i] != bob_check_bits[i]
         for i in range(len(alice_check_bits))
     )
+    print(f"number of errors      : {errors}")
+    print(f"number of bits to test: {len(alice_check_bits)}")
+    
     try:
-        qber = errors / len(alice_check_bits)
+        qber = errors / (len(alice_check_bits))
     except ZeroDivisionError:
         print("Impossible : division by zero")
-        
-    
+
+
     print(f"Alice's bit for verification: {alice_check_bits}")
-    print(f"Bob's bit for verification: {bob_check_bits}")
-    
+    print(f"Bob's bit for verification  : {bob_check_bits}")
+
     print(f"QBER: {qber}")
-    
-    # Décision basée sur le QBER
-    if qber > 0.2: # Seuil hypothétique de tolérance au QBER
-        print("Interception détectée, abandonner la clé.")
+
+    # Decision based on QBER
+    if qber > 0.2: # Hypothetical QBER tolerance limit
+        print("Interception detected, give up the key !!!")
     else:
-        print("La clé est sûre, procéder à la distillation de la clé.")
-    
+        print("The key is secure, proceed to distillation of the key.")
+
     # Alice and Bob exclude the verified bits from their final secret key
     final_key = [bit 
                  for i, bit in enumerate(key_alice_bob)
                  if i not in check_indices]
-    
+
     print(f"Final shared key: {final_key}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
-
-# Alice and Bob decide to verify x bits
-x_bits_to_check = 3
-check_indices = np.random.choice(range(len(key_alice_bob)), x_bits_to_check, replace=False)
-print(f"Indice of the verified bits: {check_indices}")
-
-# Alice and Bob publicly reveal the bits at the chosen indices
-alice_check_bits = [
-    alice_bits[i] 
-    for i in check_indices 
-    if alice_basis[i] == bob_basis[i]
-]
-
-bob_check_bits = [
-    int(measurements[i])
-    for i in check_indices
-    if alice_basis[i] == bob_basis[i]
-]
-
-print(f"Alice's bit for verification: {alice_check_bits}")
-print(f"Bob's bit for verification: {bob_check_bits}")
-
-# Verification of bit match
-mismatch_found = any(alice_bit != bob_bit 
-                     for alice_bit, bob_bit in zip(alice_check_bits, bob_check_bits))
-
-if mismatch_found:
-    print("An interception has been detected. The key is not secure")
-else: 
-    print("No interception detected. The key is secure for now")
-    
-# Alice and Bob exclude the verified bits from their final secret key
-final_key = [bit 
-             for i, bit in enumerate(key_alice_bob)
-             if i not in check_indices]
-
-print(f"Final shared key: {final_key}")
-
-"""
-
-
-
-# print(f"The key shares between Alice and Bob is: {key_alice_bob}")
