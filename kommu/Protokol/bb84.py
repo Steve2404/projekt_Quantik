@@ -42,9 +42,6 @@ def bob_measure(qc, bases):
 
     return qc
 
-def calculate_parity(bits):
-    """Calculates the parity of a list of bits. Returns 0 if parity is even, otherwise 1."""
-    return sum(bits) % 2
 
 if __name__ == '__main__':
     
@@ -58,13 +55,13 @@ if __name__ == '__main__':
     # test manually
     alice_bits  =  [0, 0, 0, 1, 1, 0, 1, 0]
     alice_basis =  [1, 0, 0, 0, 1, 0, 0, 1]
-    bob_basis   =  [1, 0, 0, 0, 1, 0, 0, 1]
+    bob_basis   =  [0, 1, 0, 0, 1, 0, 0, 1]
     
 
 
     # preparation qc
     qc = prepare_qubits(alice_bits, alice_basis)
-    qc = intercept_measure(qc, eve_basis) # Eve interception
+    #qc = intercept_measure(qc, eve_basis) # Eve interception
     qc = bob_measure(qc, bob_basis) # measure by Bob
 
     print(qc.draw())
@@ -123,12 +120,6 @@ if __name__ == '__main__':
     ]
 
     # Addition of an error checking step 
-
-    parity_check_result = calculate_parity(key_alice_bob)
-    if parity_check_result != 0:
-        print("An error has been detected in the key.")
-    else:
-        print("No error detected in the key.")
 
     # QBER calculation
     errors = sum(
