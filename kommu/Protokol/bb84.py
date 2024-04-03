@@ -38,25 +38,62 @@ def bob_measure(qc, bases):
     
     for i in range(len(bases)):
         qc.measure(i, i)
+    return qc
+
+def checking(nb_bits, alice_basis, bob_basis, bits, bit_choice, choice_index=None):
+    key = [
+        bits[i]
+        for i in range(nb_bits)
+        if alice_basis[i] == bob_basis[i]
+    ]
+    
+    if choice_index is None:
+        choice_index = []
+        choice_index = np.random.choice(list(range(len(key))), bit_choice, replace=False)
+        # choice_index = list(range(bit_choice))
+        
+    
+    check_bits   = [key[i] for i in choice_index]
+
+    return choice_index, check_bits, key
     
 
-    return qc
+    
+def qber(expeditor_key, receiver_key, choice_index, key):
+        # QBER_alice calculation
+        errors = sum(
+        expeditor_key[i] != receiver_key[i]
+        for i in range(len(choice_index))
+        )
+
+        try:
+            qber_key = errors / (len(expeditor_key))
+        except ZeroDivisionError:
+            print("Impossible : division by zero")
+
+        if qber_key > 0.1:
+            return "Interception detected, give up the key !!!", qber_key
+        print("The key is secure, proceed to distillation of the key.")
+
+        # expeditor and receiver exclude the verified bits from their final secret key
+        final_key = [bit for i, bit in enumerate(key)if i not in choice_index]
+        return f"Final shared key: {final_key}", qber_key
 
 
 if __name__ == '__main__':
     
     # simulation parameter
-    nb_bits     = 8
-    #alice_bits  = np.random.randint(2, size=nb_bits)
-    #alice_basis = np.random.randint(2, size=nb_bits)
-    #bob_basis   = np.random.randint(2, size=nb_bits)
+    nb_bits     = 20
+    alice_bits  = np.random.randint(2, size=nb_bits)
+    alice_basis = np.random.randint(2, size=nb_bits)
+    bob_basis   = np.random.randint(2, size=nb_bits)
     eve_basis   = np.random.randint(2, size=nb_bits)
-    
+
     # test manually
-    alice_bits  =  [0, 0, 0, 1, 1, 0, 1, 0]
-    alice_basis =  [1, 0, 0, 0, 1, 0, 0, 1]
-    bob_basis   =  [0, 1, 0, 0, 1, 0, 0, 1]
-    
+    #alice_bits  =  [0, 0, 0, 1, 1, 0, 1, 0]
+    #alice_basis =  [1, 0, 0, 0, 1, 0, 0, 1]
+    #bob_basis   =  [1, 0, 0, 0, 1, 0, 0, 1]
+
 
 
     # preparation qc
@@ -76,7 +113,7 @@ if __name__ == '__main__':
     retrieved_job = provider.retrieve_job(job_id)
     result = retrieved_job.result()
     measurements = result.get_memory()[0]
-    
+
     # invert the bits of Bob
     bob_bits = [int(measurements[i]) for i in range(len(measurements))]
     bob_bits.reverse()
@@ -86,69 +123,38 @@ if __name__ == '__main__':
     #job = simulation.run(transpile(qc, simulation), shots=1, memory=True)
     #result = job.result()
     #measurements = result.get_memory()[0]
-
-    key_alice_bob = [
-        bob_bits[i]
-        for i in range(nb_bits)
-        if alice_basis[i] == bob_basis[i]
-    ]
-    print(f"Cle between the Alice-Bob: {key_alice_bob}\nThe length: {len(key_alice_bob)}")
-    print(f"bob bit                  : {bob_bits}")
-    print(f"alice bit                : {alice_bits}") 
-
-    # Estimation of QBER (simplified here for the example)
-
-    x_bits_to_check = 3
-    matching_indices = [i for i in range(nb_bits) if alice_basis[i] == bob_basis[i]]
-    check_indices = np.random.choice(matching_indices, x_bits_to_check, replace=False)
-
-    print(f"matching_indices: {matching_indices}")
-    print(f"Alice Basis     : {alice_basis}")
-    print(f"BOB   Basis     : {bob_basis}")
-    print(f"selected index  : {check_indices}")
-
-    alice_check_bits = [
-        alice_bits[i] 
-        for i in check_indices 
-        if alice_basis[i] == bob_basis[i]
-    ]
-
-    bob_check_bits = [
-        bob_bits[i]
-        for i in check_indices
-        if alice_basis[i] == bob_basis[i]
-    ]
-
-    # Addition of an error checking step 
-
-    # QBER calculation
-    errors = sum(
-        alice_check_bits[i] != bob_check_bits[i]
-        for i in range(len(alice_check_bits))
-    )
-    print(f"number of errors      : {errors}")
-    print(f"number of bits to test: {len(alice_check_bits)}")
+    # ******************** Alice Seite: ***************************
     
-    try:
-        qber = errors / (len(alice_check_bits))
-    except ZeroDivisionError:
-        print("Impossible : division by zero")
-
-
-    print(f"Alice's bit for verification: {alice_check_bits}")
-    print(f"Bob's bit for verification  : {bob_check_bits}")
-
-    print(f"QBER: {qber}")
-
-    # Decision based on QBER
-    if qber > 0.2: # Hypothetical QBER tolerance limit
-        print("Interception detected, give up the key !!!")
-    else:
-        print("The key is secure, proceed to distillation of the key.")
-
-    # Alice and Bob exclude the verified bits from their final secret key
-    final_key = [bit 
-                 for i, bit in enumerate(key_alice_bob)
-                 if i not in check_indices]
-
-    print(f"Final shared key: {final_key}")
+    print("********************** Alice Seite ********************************")
+    choice_index_alice, check_bits_alice, alice_key= checking(nb_bits=nb_bits, alice_basis=alice_basis, bob_basis=bob_basis, bits=alice_bits, bit_choice=5)
+    
+    
+    choice_index_bob, check_bits_bob, bob_key= checking(nb_bits=nb_bits, alice_basis=alice_basis, bob_basis=bob_basis, bits=bob_bits, bit_choice=5, choice_index=choice_index_alice)
+    
+    print(f"Alice key            : {alice_key}")
+    print(f"Alice Basis          : {alice_basis}")
+    print(f"BOB   Basis          : {bob_basis}")
+    print(f"selected index Alice : {choice_index_alice}")
+    print(f"Alice Check          : {check_bits_alice}")
+    
+    
+    response_alice, qber_alice = qber(check_bits_alice, check_bits_bob, choice_index_alice, alice_key)
+    
+    print(f"QBER of Alice: {qber_alice}")
+    print(response_alice)
+    
+    # ********************** BoB ********************************
+    
+    print("********************** Bob Seite ********************************")   
+    print(f"bob key              : {bob_key}")
+    print(f"BOB   Basis          : {bob_basis}")
+    print(f"selected index Bob   : {choice_index_bob}")
+    print(f"Bob Check            : {check_bits_bob}")
+    
+    response_bob, qber_bob = qber(check_bits_alice, check_bits_bob, choice_index_alice, bob_key)
+    print(f"QBER of Bob          : {qber_bob}")
+    print(response_bob)
+    
+    
+    
+    
