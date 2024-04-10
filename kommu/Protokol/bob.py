@@ -10,13 +10,19 @@ def bob():  # sourcery skip: extract-method
     
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((host, port))
-        s.sendall(b"Bob") # identification
-        s.sendall(f"bases:{bob_basis}".encode())
+        s.sendall(b"Bob:") # identification
+        response = s.recv(4096)
+        print(f"Donne recu par bob: {response}")
+        s.sendall(f"basis:{bob_basis}".encode())
         
         # Attendre et recevoir qc
         received_data = s.recv(4096)
-        qasm_data = received_data.decode().split("QASM:", 1)[1]
-        qc = QuantumCircuit.from_qasm_str(qasm_data)
+        print(f"Donne recu par bob: {received_data}")
+        
+        qasm_data = received_data.decode().split("qasm:", 1)[1]
+        print(qasm_data)
+        s.sendall("Bien reçu".encode())
+        #qc = QuantumCircuit.from_qasm_str(qasm_data)
         
 
 if __name__ == "__main__":
