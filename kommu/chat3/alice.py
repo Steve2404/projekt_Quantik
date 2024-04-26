@@ -4,14 +4,14 @@ import time
 from functions.create_message import create_message,  decode_message
 
 def alice():  # sourcery skip: extract-method
-    host, port = 'localhost', 655
+    host, port = 'localhost', 9999
 
     nb_bits     = 8
     alice_bits  = np.random.randint(2, size=nb_bits).tolist()
     alice_basis = np.random.randint(2, size=nb_bits).tolist()
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((host, port))
+        s.connect(('192.168.200.52', port))
 
         s.sendall(create_message("Alice", ""))
 

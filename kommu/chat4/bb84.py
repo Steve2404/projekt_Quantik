@@ -3,10 +3,13 @@ from qiskit.compiler import transpile
 from qiskit_ibm_provider import IBMProvider
 import qiskit_aer as qe
 import numpy as np
+from read_file import read_file
 
-def prepare_qubits(bits, bases):
+token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
+
+def prepare_qubits(bits, bases, token):
     """Alice prepares the qubits"""
-    IBMProvider.save_account('356c98ef861f7b5562320e3782b24ac7f0a7f2990b93038fb7e19a1a0ec422e0785152bb4ad77b0fdc6b7df3b977ff03ce6ec663b41e9b37429f064eb9d185bf', overwrite=True)
+    IBMProvider.save_account(token, overwrite=True)
 
     
     qc = QuantumCircuit(len(bits), len(bases))
@@ -41,27 +44,21 @@ def bob_measure(qc, bases):
     return qc
 
 def checking(nb_bits, alice_basis, bob_basis, bits, bit_choice, choice_index=None):
-   # Création de la clé en comparant les bases d'Alice et de Bob
-    key = [
-        bits[i]
-        for i in range(nb_bits)
-        if alice_basis[i] == bob_basis[i]
-    ]
+    key = [bits[i] for i in range(nb_bits) if alice_basis[i] == bob_basis[i]]
     
     # Gestion de choice_index pour la sélection des bits de vérification
     if choice_index is None:
         if len(key) < bit_choice:
             raise ValueError("Le nombre de bits à choisir est plus grand que le nombre de bits disponibles.")
-        choice_index = np.random.choice(len(key), bit_choice, replace=False) 
-    
+        choice_index = np.random.choice(len(key), bit_choice, replace=False)  # Choix aléatoire sans remplacement
+
     # Récupération des bits de vérification selon les indices choisis
     check_bits = [key[i] for i in choice_index]
 
     return choice_index, check_bits, key
-    
 
     
-def qber(expeditor_key, receiver_key, choice_index, key):
+def qber_key(expeditor_key, receiver_key, choice_index, key):
         # QBER_alice calculation
         errors = sum(
         expeditor_key[i] != receiver_key[i]
@@ -75,20 +72,20 @@ def qber(expeditor_key, receiver_key, choice_index, key):
 
         if qber_key > 0.1:
             # return "Interception detected, give up the key !!!", qber_key
-            return False, qber_key
+            return False, qber_key, None
         print("The key is secure, proceed to distillation of the key.")
 
         # expeditor and receiver exclude the verified bits from their final secret key
         final_key = [bit for i, bit in enumerate(key)if i not in choice_index]
-        # return f"Final shared key: {final_key}", qber_key
-        return True, qber_key
+        #return f"Final shared key: {final_key}", qber_key
+        return True, qber_key, final_key
     
     
-def calcul(qc, name_QC="simulator_mps"):
+def calcul(qc):
         provider = IBMProvider()
 
         # Execution of the circuit
-        simulator = provider.get_backend(name_QC)
+        simulator = provider.get_backend('simulator_mps')
 
         job = simulator.run(transpile(qc, simulator), shots=1, memory=True)
         job_id = job.job_id()
@@ -98,7 +95,8 @@ def calcul(qc, name_QC="simulator_mps"):
 
         # invert the bits of Bob
         bits = [int(measurements[i]) for i in range(len(measurements))]
-        return bits.reverse()
+        bits.reverse()
+        return bits
 
 
 if __name__ == '__main__':
@@ -118,12 +116,13 @@ if __name__ == '__main__':
 
 
     # preparation qc
-    qc = prepare_qubits(alice_bits, alice_basis)
-    #qc = intercept_measure(qc, eve_basis) # Eve interception
+    qc = prepare_qubits(alice_bits, alice_basis, token)
+    qc = intercept_measure(qc, eve_basis) # Eve interception
     qc = bob_measure(qc, bob_basis) # measure by Bob
 
     print(qc.draw())
     bob_bits = calcul(qc)
+    print(f"bit de bob{bob_bits}")
 
     
 
@@ -147,7 +146,7 @@ if __name__ == '__main__':
     print(f"Alice Check          : {check_bits_alice}")
     
     
-    response_alice, qber_alice = qber(check_bits_alice, check_bits_bob, choice_index_alice, alice_key)
+    response_alice, qber_alice = qber_key(check_bits_alice, check_bits_bob, choice_index_alice, alice_key)
     
     print(f"QBER of Alice: {qber_alice}")
     print(response_alice)
@@ -160,7 +159,7 @@ if __name__ == '__main__':
     print(f"selected index Bob   : {choice_index_bob}")
     print(f"Bob Check            : {check_bits_bob}")
     
-    response_bob, qber_bob = qber(check_bits_alice, check_bits_bob, choice_index_alice, bob_key)
+    response_bob, qber_bob = qber_key(check_bits_alice, check_bits_bob, choice_index_alice, bob_key)
     print(f"QBER of Bob          : {qber_bob}")
     print(response_bob)
     
