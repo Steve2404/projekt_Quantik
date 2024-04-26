@@ -10,11 +10,13 @@ from function import *
 from bb84 import checking, qber_key, bob_measure, calcul
 from read_file import read_file
 
+# kommu/chat4/token.txt
+# Quantum/projekt_Quantik/kommu/chat4/token.txt
+token = read_file("kommu/chat4/token.txt")
 
-token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
 
 
-HOST, PORT = "localhost", 655
+HOST, PORT = "192.168.200.52", 9999
 n_bits = 20
 running= True
 

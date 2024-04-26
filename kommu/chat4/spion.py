@@ -4,15 +4,17 @@ import base64
 from qiskit_ibm_provider import IBMProvider
 import socket
 import threading
-from bb84 import checking, qber_key, bob_measure, calcul, intercept_measure
+from bb84 import intercept_measure
 from read_file import read_file
 
 
 from function import *
 
-token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
+# kommu/chat4/token.txt
+# Quantum/projekt_Quantik/kommu/chat4/token.txt
+token = read_file("kommu/chat4/token.txt")
 
-HOST, PORT = "localhost", 655
+HOST, PORT = "192.168.200.52", 9999
 nb_bits = 20
 try:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:

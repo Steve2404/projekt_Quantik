@@ -60,8 +60,7 @@ def decode_message(data):
     return action.decode(), content.decode()
 
 def concatenate_data(data):
-    result = ",".join(map(str, data[:]))
-    return result
+    return ",".join(map(str, data[:]))
 
 def deconcatenate_data(data):
     return list(map(int, data.split(",")))
@@ -142,8 +141,7 @@ def generate_sha256_key(raw_key):
     binary_string = ''.join(str(bit) for bit in raw_key)
     hasher = hashlib.sha256()
     hasher.update(binary_string.encode('utf-8'))
-    sha256_key = hasher.hexdigest()
-    return sha256_key
+    return hasher.hexdigest()
 
 def test(sock, client_data, name, data_lock, attempt):                   
     
@@ -151,9 +149,7 @@ def test(sock, client_data, name, data_lock, attempt):
     O_response = received(client_data, name, 'resp', data_lock)
     attempt = attempt == "y"
     O_response = O_response == "y"
-    decision_final = O_response if O_response == attempt else not O_response
-    
-    return decision_final
+    return O_response if O_response == attempt else not O_response
 
 
 

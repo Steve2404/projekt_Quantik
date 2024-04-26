@@ -101,9 +101,9 @@ def client(conn, addr):  # sourcery skip: low-code-quality
 
 def server():
     host = 'localhost'
-    port = 655  # Assurez-vous que ce port est le même que celui utilisé par Alice et Bob
+    port = 9999  # Assurez-vous que ce port est le même que celui utilisé par Alice et Bob
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((host, port))
+    server_socket.bind(('0.0.0.0', port))
     server_socket.listen(5)
     
     print("Serveur en écoute sur le port", port)

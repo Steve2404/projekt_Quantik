@@ -1,13 +1,15 @@
 import socket
 import threading
 from function import *
+from read_file import read_file
 
 
 clients = {}
 
 
-
-token = read_file2("Quantum/projekt_Quantik/kommu/chat4/token.txt")
+# kommu/chat4/token.txt
+# Quantum/projekt_Quantik/kommu/chat4/token.txt
+token = read_file("kommu/chat4/token.txt")
 
 
 def client(sock, addr):  
@@ -17,7 +19,6 @@ def client(sock, addr):
     while True:
         try:
             data = sock.recv(4096)
-            print(clients)
             if not data:
                 break
 
@@ -27,9 +28,9 @@ def client(sock, addr):
                 if client_name in clients:
                     send(sock, "ERROR", f"{client_name}:>Name already in use.")
                     
-                #elif client_name == "Eve":
-                #    print(f"Eve vient de se connecter: {client_name}")
-                #    clients[client_name] ={'conn': sock, 'other': None, 'spion':'spion'}
+                elif client_name == "Eve":
+                    print(f"Eve vient de se connecter: {client_name}")
+                    clients[client_name] ={'conn': sock, 'other': None, 'sender': None, 'steal':'spion', 'role': 'spion'}
                 else:
                     clients[client_name] = {'conn': sock, 'other': None}
                     print(f"{client_name} registered from {addr}")
@@ -38,6 +39,7 @@ def client(sock, addr):
 
             elif msg_type == "CONNECT":
                 target_name = content.strip()
+                    
                 # Assurer que le client cible existe
                 if target_name not in clients:
                     send(sock, "ERROR2", f"{target_name} not available.")
@@ -62,30 +64,39 @@ def client(sock, addr):
                         # Connecter les deux clients
                         current_client['other'] = target_client['conn']
                         target_client['other'] = sock
-                        print(f"je suis entrain de joindre les deux: {clients.get('Eve')}")
                         
-                        #if clients["Eve"]:
-                        #    clients["Eve"]["other"] = target_client['conn']
 
                         # Envoyer les confirmations de connexion
                         send(sock, "ACK", f"Connected to {target_name}.")
                         send(target_client['conn'], "OTHER", client_name)
-
+                        
+            # Eve se prend pour le receiver
+            elif msg_type == 'ROLE':
+                if clients.get('Eve')['role'] and content == 's':
+                    print(f"Eve se prend pour le receiver de : {client_name}")
+                    clients['Eve']['sender'] = clients[client_name]['conn']
+                    clients['Eve']['other'] = clients[client_name]['other']
+                
+                if other_sock := clients[client_name]['other']:    
+                    full_message = f"{client_name}:>{content}" 
+                    send(other_sock, command, full_message)
+                else:
+                    send(sock, "ERROR2", "No connected client.")
+            
             # interception du QC par Eve  
-            #elif clients['Eve']['spion'] and msg_type == 'QC':
-            #    if msg_type == "QC":
-            #        eve_sock = clients['Eve']['conn']
-            #        send(eve_sock, 'QC', content)
-            #        clients['Eve']['spion'] = None
+            elif clients.get('Eve')['steal'] and msg_type == 'QC':
+                eve_sock = clients['Eve']['conn']
+                client['Eve']['sender'] = client_name
+                send(eve_sock, 'QC', content)
+                clients['Eve']['steal'] = None
                    
 
-            elif msg_type in ["MESSAGE", "ROLE", "QC", "BASIS", "INDEX", "CHECK", "RESP", "BIT"]:
+            elif msg_type in ["MESSAGE", "QC", "BASIS", "INDEX", "CHECK", "RESP", "BIT"]:
 
                 if other_sock := clients[client_name]['other']:
                     # Mapping des types de messages à leurs noms de commande correspondants sur le réseau
                     message_types = {
                                         "MESSAGE": "MESSAGE",
-                                        "ROLE": "ROLE",
                                         "QC": "QC",
                                         "BASIS": "basis",
                                         "INDEX": "index",
@@ -97,8 +108,8 @@ def client(sock, addr):
                         full_message = f"{client_name}:>{content}" if msg_type == "MESSAGE" else content
                         send(other_sock, command, full_message)
                         
-                        #if msg_type != "QC":
-                        #    send_to_eve(clients, msg_type, full_message) 
+                        if msg_type != "QC":
+                            send_to_eve(clients, msg_type, full_message) 
                     else:
                         send(sock, "ERROR2", "Invalid message type.")
                 else:
@@ -128,8 +139,9 @@ def client(sock, addr):
 
 
 def server():
-    host = 'localhost'
-    port = 655  
+    host = '0.0.0.0'
+    port = 9999  
+    
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((host, port))
     server_socket.listen(5)

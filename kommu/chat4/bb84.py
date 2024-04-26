@@ -5,7 +5,10 @@ import qiskit_aer as qe
 import numpy as np
 from read_file import read_file
 
-token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
+# kommu/chat4/token.txt
+# Quantum/projekt_Quantik/kommu/chat4/token.txt
+token = read_file("kommu/chat4/token.txt")
+
 
 def prepare_qubits(bits, bases, token):
     """Alice prepares the qubits"""
