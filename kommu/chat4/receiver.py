@@ -10,13 +10,17 @@ from function import *
 from bb84 import checking, qber_key, bob_measure, calcul
 from read_file import read_file
 
-# kommu/chat4/token.txt
-# Quantum/projekt_Quantik/kommu/chat4/token.txt
-token = read_file("kommu/chat4/token.txt")
+token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
+# token = read_file("kommu/chat4/token.txt")
 
 
+#HOST = "192.168.200.52"
+#HOST = "192.168.0.103" 
+#PORT = 9999
 
-HOST, PORT = "192.168.200.52", 9999
+HOST = "localhost"
+PORT = 655
+
 n_bits = 20
 running= True
 
@@ -43,6 +47,7 @@ def receive(sock):
                                 "index":      None,
                                 "check_bits": None,
                                 "resp":       None,
+                                "decis":      None,
                                 "msg":        None,
                                 "other":      None,
                                 "error2":     None,
@@ -80,6 +85,8 @@ def receive(sock):
                         client_data[client_name]["check_bits"] = content
                     elif action == "resp":
                         client_data[client_name]["resp"] = content
+                    elif action == "decis":
+                        client_data[client_name]["decis"] = content
                     elif action == "bit":
                         client_data[client_name]["bit"] = content
                     elif action == "disc":
@@ -94,8 +101,8 @@ def receive(sock):
             print(f"Error receiving data: {e}")
             break
 
-def client(name): 
-    global running  
+def client(name):   
+    global running
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect((HOST, PORT))
@@ -134,7 +141,7 @@ def client(name):
                         send(sock, "CONNECT", other_name)
                         time.sleep(2)
                         client_data[name]['error2'] = None
-                    
+
             role = input(f"{name}, do you want to be the sender or the receiver? (s/r): ").strip().lower()
             send(sock, "ROLE", role)
 
@@ -166,7 +173,7 @@ def client(name):
                         client_data[name]["error2"] = None
 
             ##******************************* Sender Seite ****************************************
-            while decision_final and compter <3:
+            while decision_final:
                 if role.startswith('s'):
                     # Initiate BB84 or any other protocol here
                     basis, bits = initiate_bb84(sock, name, n_bits, token)
@@ -209,21 +216,22 @@ def client(name):
                     # reception decision
                     O_decision = received(client_data, name, 'resp', data_lock)
                     print(f"decision of {client_data[name]['other']}: {O_decision}")
-                            
+
             ##******************************* receiver Seite ****************************************
 
                 elif role.startswith('r'):
                     IBMProvider.save_account(token, overwrite=True)
 
-                    # Prepare to receive data
-                    basis, _ = generate_bb84_data(nb_bits=n_bits)
-                    send(sock, "BASIS", concatenate_data(basis))
-
-                    # reception QC
+                     # reception QC
                     qc = received(client_data, name, 'QC', data_lock)
                     qc_str = base64.b64decode(qc).decode('utf-8')
                     qc = QuantumCircuit.from_qasm_str(qc_str)
 
+
+                    # Prepare to receive data
+                    basis, _ = generate_bb84_data(nb_bits=n_bits)
+                    send(sock, "BASIS", concatenate_data(basis))
+                   
                     # mesure des qubits
                     qc = bob_measure(qc, basis)
                     bits = calcul(qc)
@@ -272,40 +280,53 @@ def client(name):
                     # reception other  decision
                     O_decision = received(client_data, name, 'resp',data_lock )
                     print(f"decision of {client_data[name]['other']}: {O_decision}")
-                    
-            
-            ## *********************************** Conversation ******************************                        
 
+
+            ## *********************************** Conversation ******************************                        
+                actions = ["basis", "bit", "QC", "index", "check_bits", "resp", "decis", "error2", "error", "ack2"]
                 if response:
                     print(f"qber: {qber}")
                     print(f"final key is: {final_key}")
                     if final_key:
                         sha256_key = generate_sha256_key(final_key)
                         print(f"Nouvelle cle est: {sha256_key}")
+
+                        if compter >= 3:
+                            break
+
+                        print("Vous devez refaire se processus au moins 3 fois pour être sure de l intégrité de la  cle ")
+                        attempt = input("Voulez vous recommencer (y/n): ").lower()
+                        decision_final = test(sock, client_data, name, data_lock, attempt)
+                        compter += 1
+                        #compter = 5
+                        for action in actions:
+                            client_data[name][action] = None
+                        time.sleep(4)
                         
-                    print("Vous devez refaire se processus au moins 3 fois pour être sure de l intégrité de la cle ")
+                else:
                     attempt = input("Voulez vous recommencer (y/n): ").lower()
                     decision_final = test(sock, client_data, name, data_lock, attempt)
-                    #compter += 1
-                    compter = 5
-            
-                else:
-                     attempt = input("Voulez vous recommencer (y/n): ").lower()
-                     decision_final = test(sock, client_data, name, data_lock, attempt)
-                     compter = 0
-                     
-                   
-            while running:
-                thread_receive = threading.Thread(target=received_msg, args=(client_data, name, 'msg', data_lock), daemon=True)
-                thread_receive.start()
-                send_msg(sock, name)
-                
-                thread_receive.join()
-                
-                if client_data[name]['disc']:
-                    print("Sortie de la boucle infini")
-                    break
-                      
+                    compter = 0
+                    for action in actions:
+                        client_data[name][action] = None
+                    time.sleep(4)
+                compter = 5
+                if compter >3:
+                    while running:
+                        try:
+                            thread_receive = threading.Thread(target=received_msg, args=(client_data, name, 'msg',  data_lock, sha256_key), daemon=False)
+                            thread_receive.start()
+                            send_msg(sock, name, sha256_key)
+
+                            thread_receive.join()
+
+                            if client_data[name]['disc']:
+                                break
+                        except Exception as e:
+                            print(f"Error with: {e}")
+                else: 
+                    print("End !!!")
+                    
             print("Fin de la communication ...")
     except socket.error as e:
         print(f"Failed to connect to {HOST}:{PORT}, error: {e}")

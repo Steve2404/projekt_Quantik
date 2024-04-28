@@ -109,26 +109,28 @@ def received(data, name, action, data_lock):
     
 
 running = True
-def received_msg(data, name, action, data_lock):
+def received_msg(data, name, action, data_lock, key):
     global running
     while running: 
         with data_lock:
             if data[name][action] is not None and data[name]['other'] is not None:
                 message = data[name][action]
+                cipher_sms = decrypt_message(message, key)
                 print(f"(ack:{data[name]['other']}): {message}")
                 data[name][action] = None
 
 
        
-def send_msg(sock, name):
+def send_msg(sock, name, key):
     global running
     while running:
         msg_content = input(f"{name}:> ")
+        cipher_sms = encrypt_message(msg_content, key)
         if msg_content.lower() == "quit":
             send(sock, "DISCONNECT", name)
             running = False
         else:      
-            send(sock, "MESSAGE", msg_content)
+            send(sock, "MESSAGE", cipher_sms)
 
 def print_info(name, O_name, basis, O_basis):
     print(f"{name} Basis is: {basis}")
@@ -145,8 +147,8 @@ def generate_sha256_key(raw_key):
 
 def test(sock, client_data, name, data_lock, attempt):                   
     
-    send(sock, "RESP", f"{attempt}")
-    O_response = received(client_data, name, 'resp', data_lock)
+    send(sock, "DECIS", f"{attempt}")
+    O_response = received(client_data, name, 'decis', data_lock)
     attempt = attempt == "y"
     O_response = O_response == "y"
     return O_response if O_response == attempt else not O_response
@@ -250,11 +252,6 @@ def eve_interception(qc, qubit_index):
     return bits
    
 
-
-
-
-
-    
     
 
 # Chiffrer un message en utilisant one-time pad

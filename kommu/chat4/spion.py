@@ -10,11 +10,16 @@ from read_file import read_file
 
 from function import *
 
-# kommu/chat4/token.txt
-# Quantum/projekt_Quantik/kommu/chat4/token.txt
-token = read_file("kommu/chat4/token.txt")
+token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
+# token = read_file("kommu/chat4/token.txt")
 
-HOST, PORT = "192.168.200.52", 9999
+#HOST = "192.168.200.52"
+#HOST = "192.168.0.108" 
+#PORT = 6552
+
+HOST = "localhost"
+PORT = 655
+
 nb_bits = 20
 try:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -22,7 +27,7 @@ try:
 
         send(sock, "REGISTER", 'Eve')
         base = np.random.randint(2, size=nb_bits)
-
+        print("Je vais me connecter !!!")
         try:
             while True:
                 data = sock.recv(4096)
