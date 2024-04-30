@@ -7,7 +7,7 @@ import hashlib
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Util.Padding import pad, unpad
 from Crypto.PublicKey import RSA
-from qiskit import QuantumCircuit, execute
+from qiskit import QuantumCircuit
 import qiskit_aer as qe
 from qiskit_ibm_provider import IBMProvider
 from qiskit.compiler import transpile
@@ -156,16 +156,29 @@ def test(sock, client_data, name, data_lock, attempt):
 
 
 
+<<<<<<< HEAD
 # def cipher_RSA(qc_key, data):  # sourcery skip: remove-unreachable-code
 # # Générez une clé RSA
 #     key = RSA.generate(2048)
 #     public_key = key.publickey()
 #     encryptor = PKCS1_OAEP.new(public_key)
+=======
+def cipher_RSA(qc_key, data):  # sourcery skip: remove-unreachable-code
+# Générez une clé RSA
+    key = RSA.generate(2048)
+    public_key = key.publickey()
+    encrypter = PKCS1_OAEP.new(public_key)
+>>>>>>> df116ae (modification chez Leonel)
 
 #     sha256_key = generate_sha256_key(qc_key)
 
+<<<<<<< HEAD
 #     # Chiffrez la clé AES avec RSA
 #     encrypted_aes_key = encryptor.encrypt(sha256_key.encode('utf-8'))
+=======
+    # Chiffrez la clé AES avec RSA
+    encrypted_aes_key = encrypter.encrypt(sha256_key.encode('utf-8'))
+>>>>>>> df116ae (modification chez Leonel)
 
 #     # Maintenant, vous pouvez utiliser aes_key pour chiffrer vos données avec AES
 #     aes_cipher = AES.new(sha256_key, AES.MODE_GCM)

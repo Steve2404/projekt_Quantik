@@ -8,8 +8,8 @@ clients = {}
 
 
 
-token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
-#token = read_file("kommu/chat4/token.txt")
+#token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
+token = read_file("kommu/chat4/token.txt")
 
 
 def client(sock, addr):  
@@ -149,6 +149,7 @@ def server():
     port = 655
     #host = '0.0.0.0'
     #port = 9999  
+
     
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((host, port))
