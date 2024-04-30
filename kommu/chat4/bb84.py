@@ -29,7 +29,6 @@ def intercept_measure(qc, bases):
     for i in range(len(bases)):
         if bases[i] == 1: # Eve chooses a basis
             qc.h(i)
-        # qc.measure(i, i) # Eve measure the qubit
         
     qc.barrier()
     return qc
@@ -48,13 +47,13 @@ def bob_measure(qc, bases):
 def checking(nb_bits, alice_basis, bob_basis, bits, bit_choice, choice_index=None):
     key = [bits[i] for i in range(nb_bits) if alice_basis[i] == bob_basis[i]]
     
-    # Gestion de choice_index pour la sélection des bits de vérification
+    # Index selection management for the selection of verification bits
     if choice_index is None:
         if len(key) < bit_choice:
-            raise ValueError("Le nombre de bits à choisir est plus grand que le nombre de bits disponibles.")
-        choice_index = np.random.choice(len(key), bit_choice, replace=False)  # Choix aléatoire sans remplacement
+            raise ValueError("The number of bits to be selected is greater than the number of bits available.")
+        choice_index = np.random.choice(len(key), bit_choice, replace=False)  # Random choice without replacement
 
-    # Récupération des bits de vérification selon les indices choisis
+    # Recovery of verification bits according to selected indices
     check_bits = [key[i] for i in choice_index]
 
     return choice_index, check_bits, key
@@ -79,7 +78,7 @@ def qber_key(expeditor_key, receiver_key, choice_index, key):
 
         # expeditor and receiver exclude the verified bits from their final secret key
         final_key = [bit for i, bit in enumerate(key)if i not in choice_index]
-        #return f"Final shared key: {final_key}", qber_key
+        
         return True, qber_key, final_key
     
     

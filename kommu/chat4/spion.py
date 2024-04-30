@@ -27,7 +27,6 @@ try:
 
         send(sock, "REGISTER", 'Eve')
         base = np.random.randint(2, size=nb_bits)
-        print("Je vais me connecter !!!")
         try:
             while True:
                 data = sock.recv(4096)
@@ -43,7 +42,7 @@ try:
                     qc_str = qc.qasm()
                     qc_qasm = base64.b64encode(qc_str.encode()).decode('utf-8')
                     send(sock, "QC", qc_qasm)
-                    print("Envois du QC au server !!!")
+                    print("Sending from QC to server !!!")
                 else:
                     print(f"Received sms: {action}: {content}" )
 

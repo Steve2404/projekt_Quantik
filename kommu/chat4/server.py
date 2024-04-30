@@ -29,7 +29,7 @@ def client(sock, addr):
                     send(sock, "ERROR", f"{client_name}:>Name already in use.")
                     
                 elif client_name == "Eve":
-                    print(f"Eve vient de se connecter: {client_name}")
+                    print(f"Eve has just logged on: {client_name}")
                     clients[client_name] ={'conn': sock, 'other': None, 'sender': None, 'steal':'spion'}
                 else:
                     clients[client_name] = {'conn': sock, 'other': None}
@@ -40,37 +40,37 @@ def client(sock, addr):
             elif msg_type == "CONNECT":
                 target_name = content.strip()
                     
-                # Assurer que le client cible existe
+                # Ensure that the target customer exists
                 if target_name not in clients:
                     send(sock, "ERROR2", f"{target_name} not available.")
                 else:
                     target_client = clients[target_name]
                     current_client = clients[client_name]
 
-                    # Vérifie si le client cible est le même que le client actuel
+                    # Checks whether the target client is the same as the current client
                     if target_client['conn'] == current_client['conn']:
                         send(sock, "ERROR2", "You cannot communicate with yourself.")
-                        # Vérifie si le client actuel ou le client cible est déjà connecté à quelqu'un d'autre
+                        # Checks whether the current or target client is already connected to someone else
                     elif current_client['other'] is not None or target_client['other'] is not None:
                         if current_client['other'] == target_client['conn']:
-                            # Si déjà connectés l'un à l'autre
+                            # If already connected to each other
                             send(sock, "ACK2", f"{target_name} Is already connected to you.")
                             send(sock, "ACK", f"Connected to {target_name}.")
                             send(target_client['conn'], "OTHER", client_name)
                         else:
-                            # Si déjà connectés mais pas l'un à l'autre
+                            # If already connected but not to each other
                             send(sock, "ERROR2", f"{target_name} is already connected to someone else.")
                     else:
-                        # Connecter les deux clients
+                        # Connect the two clients
                         current_client['other'] = target_client['conn']
                         target_client['other'] = sock
                         
 
-                        # Envoyer les confirmations de connexion
+                        # Send connection confirmations
                         send(sock, "ACK", f"Connected to {target_name}.")
                         send(target_client['conn'], "OTHER", client_name)
                         
-            # Eve se prend pour le receiver
+            # Eve thinks she's the receiver
             elif msg_type == 'ROLE':
                 if clients.get('Eve') is not None and content == 's':
                     clients['Eve']['sender'] = clients[client_name]['conn']
@@ -82,7 +82,7 @@ def client(sock, addr):
                 else:
                     send(sock, "ERROR2", "No connected client.")
             
-            # interception du QC par Eve  
+            # QC interception by Eve  
             elif msg_type == 'QC':
                 if clients.get('Eve') is not None and clients['Eve']['steal']:
                     eve_sock = clients['Eve']['conn']
@@ -102,7 +102,7 @@ def client(sock, addr):
             elif msg_type in ["MESSAGE", "BASIS", "INDEX", "CHECK", "RESP", "DECIS", "BIT"]:
 
                 if other_sock := clients[client_name]['other']:
-                    # Mapping des types de messages à leurs noms de commande correspondants sur le réseau
+                    # Mapping message types to their corresponding command names on the network
                     message_types = {
                                         "MESSAGE": "MESSAGE",
                                         "BASIS": "basis",

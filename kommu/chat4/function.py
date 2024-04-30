@@ -5,6 +5,7 @@ import base64
 from bb84 import prepare_qubits
 import hashlib
 from Crypto.Cipher import AES, PKCS1_OAEP
+from Crypto.Util.Padding import pad, unpad
 from Crypto.PublicKey import RSA
 from qiskit import QuantumCircuit, execute
 import qiskit_aer as qe
@@ -115,8 +116,8 @@ def received_msg(data, name, action, data_lock, key):
         with data_lock:
             if data[name][action] is not None and data[name]['other'] is not None:
                 message = data[name][action]
-                cipher_sms = decrypt_message(message, key)
-                print(f"(ack:{data[name]['other']}): {message}")
+                cipher_sms = decrypt_AES(key, message)
+                print(f"(ack:{data[name]['other']}): {cipher_sms}")
                 data[name][action] = None
 
 
@@ -125,7 +126,7 @@ def send_msg(sock, name, key):
     global running
     while running:
         msg_content = input(f"{name}:> ")
-        cipher_sms = encrypt_message(msg_content, key)
+        cipher_sms = cipher_AES(key, msg_content)
         if msg_content.lower() == "quit":
             send(sock, "DISCONNECT", name)
             running = False
@@ -143,7 +144,7 @@ def generate_sha256_key(raw_key):
     binary_string = ''.join(str(bit) for bit in raw_key)
     hasher = hashlib.sha256()
     hasher.update(binary_string.encode('utf-8'))
-    return hasher.hexdigest()
+    return hasher.hexdigest()[:16]
 
 def test(sock, client_data, name, data_lock, attempt):                   
     
@@ -155,38 +156,36 @@ def test(sock, client_data, name, data_lock, attempt):
 
 
 
-def cipher_RSA(qc_key, data):  # sourcery skip: remove-unreachable-code
-# Générez une clé RSA
-    key = RSA.generate(2048)
-    public_key = key.publickey()
-    encryptor = PKCS1_OAEP.new(public_key)
+# def cipher_RSA(qc_key, data):  # sourcery skip: remove-unreachable-code
+# # Générez une clé RSA
+#     key = RSA.generate(2048)
+#     public_key = key.publickey()
+#     encryptor = PKCS1_OAEP.new(public_key)
 
-    sha256_key = generate_sha256_key(qc_key)
+#     sha256_key = generate_sha256_key(qc_key)
 
-    # Chiffrez la clé AES avec RSA
-    encrypted_aes_key = encryptor.encrypt(sha256_key.encode('utf-8'))
+#     # Chiffrez la clé AES avec RSA
+#     encrypted_aes_key = encryptor.encrypt(sha256_key.encode('utf-8'))
 
-    # Maintenant, vous pouvez utiliser aes_key pour chiffrer vos données avec AES
-    aes_cipher = AES.new(sha256_key, AES.MODE_GCM)
-    ciphertext, tag = aes_cipher.encrypt_and_digest(data)
-    return ciphertext, tag
+#     # Maintenant, vous pouvez utiliser aes_key pour chiffrer vos données avec AES
+#     aes_cipher = AES.new(sha256_key, AES.MODE_GCM)
+#     ciphertext, tag = aes_cipher.encrypt_and_digest(data)
+#     return ciphertext, tag
 
+def cipher_AES(key, data):
+    cipher = AES.new(key, AES.MODE_ECB)
+    ciphertext = cipher.encrypt(pad(data.encode('utf-8'), AES.block_size))
+    return ciphertext
 
-
-
-
-## Pour déchiffrer et vérifier les données
-#try:
-#    decryptor = AES.new(key, AES.MODE_GCM, nonce=cipher.nonce)
-#    plaintext = decryptor.decrypt_and_verify(ciphertext, tag)
-#    print("Le message est:", plaintext)
-#except ValueError:
-#    print("Clé incorrecte ou message corrompu.")
+def decrypt_AES(key, ciphertext):
+    cipher = AES.new(key, AES.MODE_ECB)
+    decrypted_data = unpad(cipher.decrypt(ciphertext), AES.block_size)
+    return decrypted_data.decode('utf-8')
 
 
 
 
-# Simuler la création d'un état de Bell
+# Simulating the creation of a Bell state
 def create_bell_state(token):
     IBMProvider.save_account(token, overwrite=True)
     qc = QuantumCircuit(2, 2)
@@ -195,7 +194,7 @@ def create_bell_state(token):
     return qc
 
 
-# Mesurer l'état de Bell
+# Measuring Bell's condition
 def measure_bell_state(qc, alice_basis, bob_basis):
     provider = IBMProvider()
     simulator = provider.get_backend('simulator_mps')
@@ -234,7 +233,7 @@ def eve_interception(qc, qubit_index):
     provider = IBMProvider()
     simulator = provider.get_backend('simulator_mps')
     
-    # Eve essaie d'intercepter le qubit en mesurant dans une base aléatoire
+    # Eve tries to intercept the qubit by measuring in a random base
     eve_basis = 'X' if np.random.random() < 0.5 else 'Z'
     
     
@@ -254,11 +253,11 @@ def eve_interception(qc, qubit_index):
 
     
 
-# Chiffrer un message en utilisant one-time pad
+# Encrypting a message using one-time pad
 def encrypt_message(message, key):
     return ''.join(str(int(message_bit) ^ int(key_bit)) for message_bit, key_bit in zip(message, key))
 
-# Déchiffrer un message
+# Deciphering a message
 def decrypt_message(encrypted_message, key):
-    return encrypt_message(encrypted_message, key)  # La même fonction peut être utilisée pour chiffrer et déchiffrer
+    return encrypt_message(encrypted_message, key) 
 

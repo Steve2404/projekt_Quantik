@@ -35,7 +35,7 @@ def receive(sock):
         try:
             if data := sock.recv(4096).decode():
                 action, content = decode_message(data.encode())
-                # appliquer les différentes méthodes en fonction des actions
+                # Apply the different methods based on the actions
                 with data_lock:  
                     if action == "REGISTER":
                         client_name = content.split(":>")[0]
@@ -118,7 +118,7 @@ def client(name):
                         break
                     elif client_data[name]['error'] is not None:
                         print(f"(error):> {client_data[name]['error']}")
-                        print("Changez de nom .....")
+                        print("Change your name .....")
                         name = name_ask("Enter your name: ")
                         send(sock, "REGISTER", name)
 
@@ -136,7 +136,7 @@ def client(name):
                         break
                     else:
                         print(f"(error):> {client_data[name]['error2']}")
-                        print("Veillez réessayer ...")
+                        print("Please try again ...")
                         other_name = name_ask("Enter the name of the client you wish to connect to: ")
                         send(sock, "CONNECT", other_name)
                         time.sleep(2)
@@ -155,7 +155,7 @@ def client(name):
                     if client_data[name]["role"] is not None:
                         other_role = client_data[name]["role"]
                         if other_role == role:
-                            print("(ack):> Vous avez choisi la meme chose, veillez réessayer ....")
+                            print("(ack):>You've chosen the same thing, so please try again  ....")
                             role = name_ask(f"{name}, do you want to be the sender or the receiver? (s/r): ".strip().lower())
                             send(sock, "ROLE", role)
                             time.sleep(2)
@@ -166,7 +166,7 @@ def client(name):
                             break
                     elif client_data[name]["error2"] is not None:
                         print(f"(error):> {client_data[name]['error2']}")
-                        print("Veillez réessayer ...")
+                        print("Please try again ...")
                         role = name_ask(f"{name}, do you want to be the sender or the receiver? (s/r): ".strip().lower())
                         send(sock, "CONNECT", role)
                         time.sleep(2) 
@@ -186,30 +186,30 @@ def client(name):
 
                     print_info(name, other_name, basis, O_basis)
 
-                    # selection un nbre de bit pour le test
+                    # select a number of bits for the test
                     while True:
-                        bit_choice = int(input("Combien de bit voulez vous sélectionner pour faire le teste: "))
+                        bit_choice = int(input("How many bits do you want to select for the test?: "))
                         try:
                             choice_index, check_bits, key= checking(nb_bits=n_bits, alice_basis=basis, bob_basis=O_basis, bits=bits, bit_choice=bit_choice)
                             break
                         except ValueError as e:
                             print(e)
-                            print("Veillez réessayer ....")
+                            print("Please try again ....")
 
-                    # envois du (nbre de bit) et (index choisi) 
+                    # send (number of bits) and (chosen index) 
                     send(sock, "INDEX", concatenate_data(choice_index))
                     send(sock, "BIT", bit_choice)
                     time.sleep(1)
 
-                    # envois check_bits
+                    # send check_bits
                     send(sock, "CHECK", concatenate_data(check_bits))
 
-                    # reception other check_bits
+                    # reception of other check_bits
                     O_check_bits = deconcatenate_data(received(client_data, name, 'check_bits', data_lock))
                     print(f"Check_bits of {client_data[name]['other']}: {O_check_bits}")
 
 
-                    # calcul du qber
+                    # calculation of qber
                     response, qber, final_key = qber_key(check_bits, O_check_bits, choice_index, key)
                     send(sock, "RESP", f"{decision(response)}")
 
@@ -217,7 +217,7 @@ def client(name):
                     O_decision = received(client_data, name, 'resp', data_lock)
                     print(f"decision of {client_data[name]['other']}: {O_decision}")
 
-            ##******************************* receiver Seite ****************************************
+            ##******************************* receiver Part ****************************************
 
                 elif role.startswith('r'):
                     IBMProvider.save_account(token, overwrite=True)
@@ -228,30 +228,30 @@ def client(name):
                     qc = QuantumCircuit.from_qasm_str(qc_str)
 
 
-                    # Prepare to receive data
+                    # Preparing to receive data
                     basis, _ = generate_bb84_data(nb_bits=n_bits)
                     send(sock, "BASIS", concatenate_data(basis))
                    
-                    # mesure des qubits
+                    # qubit measurement
                     qc = bob_measure(qc, basis)
                     bits = calcul(qc)
                     print(f"{name} Bits: {bits}")
                     print(qc.draw())
 
-                    # reception other basis
+                    # reception of other basis
                     O_basis = deconcatenate_data(received(client_data, name, 'basis', data_lock))
                     print(f"Basis of {client_data[name]['other']}: {O_basis}") 
 
 
                     print_info(name, other_name, basis, O_basis)
 
-                    # reception bit choice
+                    # reception of chosen bits
                     bit_choice = received(client_data, name, 'bit', data_lock)
                     print(f"nb of bit of {client_data[name]['other']}: {bit_choice}") 
 
 
 
-                    # reception choix index
+                    # reception of chosen indexes
                     choice_index = deconcatenate_data(received(client_data, name, 'index', data_lock))
                     print(f"choice of index of {client_data[name]['other']}: {choice_index}")
 
@@ -259,22 +259,22 @@ def client(name):
                     print(f"{client_data[name]['other']} a choisir {bit_choice} bits")
                     print(f"{client_data[name]['other']} a choisir {choice_index} comme index")
 
-                    # calcul check_bit et choice_index
+                    # calculation of check_bit and choice_index
                     choice_index, check_bits, key= checking(nb_bits=n_bits, alice_basis=O_basis, bob_basis=basis, bits=bits, bit_choice=bit_choice, choice_index=choice_index)
 
-                    # envois check_bit
+                    # send check_bit
                     send(sock, "CHECK", concatenate_data(check_bits))
 
 
-                    # reception other check_bit
+                    # reception of other check_bit
                     O_check_bits = deconcatenate_data(received(client_data, name, 'check_bits', data_lock))
                     print(f"check_bits of {client_data[name]['other']}: {O_check_bits}") 
 
 
-                    # calcul qber
+                    # calculation of qber
                     response, qber, final_key = qber_key(O_check_bits, check_bits, choice_index, key)
 
-                    # envois decision
+                    # send decision
                     send(sock, "RESP", f"{decision(response)}")
 
                     # reception other  decision
@@ -289,22 +289,22 @@ def client(name):
                     print(f"final key is: {final_key}")
                     if final_key:
                         sha256_key = generate_sha256_key(final_key)
-                        print(f"Nouvelle cle est: {sha256_key}")
+                        print(f"New key is: {sha256_key}")
 
                         if compter >= 3:
                             break
 
-                        print("Vous devez refaire se processus au moins 3 fois pour être sure de l intégrité de la  cle ")
-                        attempt = input("Voulez vous recommencer (y/n): ").lower()
+                        print("You must repeat this process at least 3 times to be sure of the integrity of the key. ")
+                        attempt = input("Would you like to start again (y/n): ").lower()
                         decision_final = test(sock, client_data, name, data_lock, attempt)
                         compter += 1
-                        #compter = 5
+                    
                         for action in actions:
                             client_data[name][action] = None
                         time.sleep(4)
                         
                 else:
-                    attempt = input("Voulez vous recommencer (y/n): ").lower()
+                    attempt = input("Would you like to start again (y/n): ").lower()
                     decision_final = test(sock, client_data, name, data_lock, attempt)
                     compter = 0
                     for action in actions:
@@ -327,7 +327,7 @@ def client(name):
                 else: 
                     print("End !!!")
                     
-            print("Fin de la communication ...")
+            print("End of communication ...")
     except socket.error as e:
         print(f"Failed to connect to {HOST}:{PORT}, error: {e}")
         sys.exit(1)
