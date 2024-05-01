@@ -1,0 +1,11 @@
+pyinstaller --onefile \
+  --add-data '/home/steve/Dokumente/Script/projekt_Quantik/.venv/lib/python3.11/site-packages/qiskit_ibm_provider/VERSION.txt:qiskit_ibm_provider/' \
+  --add-data '/home/steve/Dokumente/Script/projekt_Quantik/.venv/lib/python3.11/site-packages/qiskit/VERSION.txt:qiskit/' \
+  --add-data '/home/steve/Dokumente/Script/projekt_Quantik/.venv/lib/python3.11/site-packages/qiskit_aer/VERSION.txt:qiskit_aer/' \
+  --add-data '/home/steve/Dokumente/Script/projekt_Quantik/kommu/chat4/token.txt:kommu/chat4/' \
+  --add-data '/home/steve/Dokumente/Script/projekt_Quantik/.venv/lib/python3.11/site-packages/qiskit/qasm/libs:qiskit/qasm/libs' \
+  spion.py
+
+
+curl -sSL https://install.python-poetry.org | python3 -
+

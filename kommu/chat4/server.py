@@ -8,8 +8,9 @@ clients = {}
 
 
 
-token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
-#token = read_file("kommu/chat4/token.txt")
+#token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
+path_name = "kommu/chat4/token.txt"
+token = read_file(path_name)
 
 
 def client(sock, addr):  
@@ -29,7 +30,8 @@ def client(sock, addr):
                     send(sock, "ERROR", f"{client_name}:>Name already in use.")
                     
                 elif client_name == "Eve":
-                    print(f"{client_name} has just logged on ...")
+                    print(f"{client_name} has just logged on ")
+
                     clients[client_name] ={'conn': sock, 'other': None, 'sender': None, 'steal':'spion'}
                 else:
                     clients[client_name] = {'conn': sock, 'other': None}
@@ -146,9 +148,10 @@ def client(sock, addr):
 
 def server():
     host = "localhost"
-    port = 655
+    port = 6555
     #host = '0.0.0.0'
     #port = 9999  
+
     
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((host, port))

@@ -7,7 +7,7 @@ import hashlib
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Util.Padding import pad, unpad
 from Crypto.PublicKey import RSA
-from qiskit import QuantumCircuit, execute
+from qiskit import QuantumCircuit
 import qiskit_aer as qe
 from qiskit_ibm_provider import IBMProvider
 from qiskit.compiler import transpile
@@ -110,28 +110,28 @@ def received(data, name, action, data_lock):
     
 
 running = True
-def received_msg(data, name, action, data_lock, key):
+def received_msg(data, name, action, data_lock):
     global running
     while running: 
         with data_lock:
             if data[name][action] is not None and data[name]['other'] is not None:
                 message = data[name][action]
-                cipher_sms = decrypt_AES(key, message)
-                print(f"(ack:{data[name]['other']}): {cipher_sms}")
+                #cipher_sms = decrypt_AES(key, message)
+                print(f"(ack:{data[name]['other']}): {message}")
                 data[name][action] = None
 
 
        
-def send_msg(sock, name, key):
+def send_msg(sock, name):
     global running
     while running:
         msg_content = input(f"{name}:> ")
-        cipher_sms = cipher_AES(key, msg_content)
+        #cipher_sms = cipher_AES(key, msg_content)
         if msg_content.lower() == "quit":
             send(sock, "DISCONNECT", name)
             running = False
         else:      
-            send(sock, "MESSAGE", cipher_sms)
+            send(sock, "MESSAGE", msg_content)
 
 def print_info(name, O_name, basis, O_basis):
     print(f"{name} Basis is: {basis}")
@@ -156,26 +156,17 @@ def test(sock, client_data, name, data_lock, attempt):
 
 
 
-# def cipher_RSA(qc_key, data):  # sourcery skip: remove-unreachable-code
-# # Générez une clé RSA
-#     key = RSA.generate(2048)
-#     public_key = key.publickey()
-#     encryptor = PKCS1_OAEP.new(public_key)
 
-#     sha256_key = generate_sha256_key(qc_key)
+def cipher_RSA(qc_key, data):  # sourcery skip: remove-unreachable-code
+# Générez une clé RSA
+    key = RSA.generate(2048)
+    public_key = key.publickey()
+    encrypter = PKCS1_OAEP.new(public_key)
 
-#     # Chiffrez la clé AES avec RSA
-#     encrypted_aes_key = encryptor.encrypt(sha256_key.encode('utf-8'))
-
-#     # Maintenant, vous pouvez utiliser aes_key pour chiffrer vos données avec AES
-#     aes_cipher = AES.new(sha256_key, AES.MODE_GCM)
-#     ciphertext, tag = aes_cipher.encrypt_and_digest(data)
-#     return ciphertext, tag
 
 def cipher_AES(key, data):
     cipher = AES.new(key, AES.MODE_ECB)
-    ciphertext = cipher.encrypt(pad(data.encode('utf-8'), AES.block_size))
-    return ciphertext
+    return cipher.encrypt(pad(data.encode('utf-8'), AES.block_size))
 
 def decrypt_AES(key, ciphertext):
     cipher = AES.new(key, AES.MODE_ECB)

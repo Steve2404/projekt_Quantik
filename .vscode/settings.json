@@ -5,5 +5,7 @@
         "statevector"
     ],
     "commentTranslate.source": "Google",
-    "CodeGPT.apiKey": "CodeGPT Plus Beta"
+    "CodeGPT.apiKey": "CodeGPT Plus Beta",
+    "commentTranslate.hover.enabled": false,
+    
 }

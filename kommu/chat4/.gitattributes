@@ -1,0 +1,2 @@
+kommu/chat4/dist/spion filter=lfs diff=lfs merge=lfs -text
+kommu/chat4/build/spion/spion.pkg filter=lfs diff=lfs merge=lfs -text
