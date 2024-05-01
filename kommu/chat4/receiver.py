@@ -10,8 +10,9 @@ from function import *
 from bb84 import checking, qber_key, bob_measure, calcul
 from read_file import read_file
 
-token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
-# token = read_file("kommu/chat4/token.txt")
+#token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
+path_name = "kommu/chat4/token.txt"
+token = read_file(path_name)
 
 
 #HOST = "192.168.200.52"
@@ -19,7 +20,7 @@ token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
 #PORT = 9999
 
 HOST = "localhost"
-PORT = 655
+PORT = 6555
 
 n_bits = 20
 running= True
@@ -310,22 +311,22 @@ def client(name):
                     for action in actions:
                         client_data[name][action] = None
                     time.sleep(4)
-                compter = 5
-                if compter >3:
-                    while running:
-                        try:
-                            thread_receive = threading.Thread(target=received_msg, args=(client_data, name, 'msg',  data_lock, sha256_key), daemon=False)
-                            thread_receive.start()
-                            send_msg(sock, name, sha256_key)
+            compter = 5
+            if compter >3:
+                while running:
+                    try:
+                        thread_receive = threading.Thread(target=received_msg, args=(client_data, name, 'msg',  data_lock), daemon=False)
+                        thread_receive.start()
+                        send_msg(sock, name)
 
-                            thread_receive.join()
+                        thread_receive.join()
 
-                            if client_data[name]['disc']:
-                                break
-                        except Exception as e:
-                            print(f"Error with: {e}")
-                else: 
-                    print("End !!!")
+                        if client_data[name]['disc']:
+                            break
+                    except Exception as e:
+                        print(f"Error with: {e}")
+            else: 
+                print("End !!!")
                     
             print("End of communication ...")
     except socket.error as e:
