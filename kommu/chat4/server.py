@@ -29,7 +29,7 @@ def client(sock, addr):
                     send(sock, "ERROR", f"{client_name}:>Name already in use.")
                     
                 elif client_name == "Eve":
-                    print(f"Eve has just logged on: {client_name}")
+                    print(f"{client_name} has just logged on ...")
                     clients[client_name] ={'conn': sock, 'other': None, 'sender': None, 'steal':'spion'}
                 else:
                     clients[client_name] = {'conn': sock, 'other': None}

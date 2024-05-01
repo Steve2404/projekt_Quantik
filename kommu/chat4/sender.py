@@ -290,9 +290,10 @@ def client(name):
                     if final_key:
                         sha256_key = generate_sha256_key(final_key)
                         print(f"New key is: {sha256_key}")
-
-                        if compter >= 3:
+                        
+                        if compter>=3:
                             break
+
 
                         print("You must repeat this process at least 3 times to be sure of the integrity of the key. ")
                         attempt = input("Would you like to start again (y/n): ").lower()
@@ -310,22 +311,22 @@ def client(name):
                     for action in actions:
                         client_data[name][action] = None
                     time.sleep(4)
-                compter = 5
-                if compter >3:
-                    while running:
-                        try:
-                            thread_receive = threading.Thread(target=received_msg, args=(client_data, name, 'msg',  data_lock, sha256_key), daemon=False)
-                            thread_receive.start()
-                            send_msg(sock, name, sha256_key)
+                    
+            if compter >3:
+                while running:
+                    try:
+                        thread_receive = threading.Thread(target=received_msg, args=(client_data, name, 'msg',  data_lock, sha256_key), daemon=False)
+                        thread_receive.start()
+                        send_msg(sock, name, sha256_key)
 
-                            thread_receive.join()
+                        thread_receive.join()
 
-                            if client_data[name]['disc']:
-                                break
-                        except Exception as e:
-                            print(f"Error with: {e}")
-                else: 
-                    print("End !!!")
+                        if client_data[name]['disc']:
+                            break
+                    except Exception as e:
+                        print(f"Error with: {e}")
+            else: 
+                print("End !!!")
                     
             print("End of communication ...")
     except socket.error as e:
