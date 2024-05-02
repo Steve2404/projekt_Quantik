@@ -77,7 +77,7 @@ def initiate_bb84(sock, name, nb_bits, token):
     
     basis, bits = generate_bb84_data(nb_bits)
     qc = prepare_qubits(bits, basis, token)
-    print(qc.draw())
+    #print(qc.draw())
     qc_str = qc.qasm()
     qasm_circuit = base64.b64encode(qc_str.encode()).decode('utf-8')
     
@@ -125,26 +125,25 @@ def received_msg(data, name, action, data_lock, key):
 def send_msg(sock, name, key):
     global running
     while running:
-        msg_content = input(f"{name}:> ")
-        cipher_sms = encrypt_aes(msg_content, key)
-        if msg_content.lower() == "quit":
+        time.sleep(1)
+        try:
+            msg_content = input(f"{name}:> ")
+            cipher_sms = encrypt_aes(msg_content, key)
+            if msg_content.lower() == "quit":
+                send(sock, "DISCONNECT", name)
+                running = False
+            else:      
+                send(sock, "MESSAGE", cipher_sms)
+        except KeyboardInterrupt:
+            print("Interruption détectée, fermeture de la connexion.")
             send(sock, "DISCONNECT", name)
             running = False
-        else:      
-            send(sock, "MESSAGE", cipher_sms)
 
 def print_info(name, O_name, basis, O_basis):
     print(f"{name} Basis is: {basis}")
     print(f"{O_name} Basis is: {O_basis}")
 
 
-
-
-def generate_sha256_key(raw_key):
-    binary_string = ''.join(str(bit) for bit in raw_key)
-    hasher = hashlib.sha256()
-    hasher.update(binary_string.encode('utf-8'))
-    return hasher.hexdigest()[:16]
 
 def test(sock, client_data, name, data_lock, attempt):                   
     
@@ -155,26 +154,6 @@ def test(sock, client_data, name, data_lock, attempt):
     return O_response if O_response == attempt else not O_response
 
 
-
-def prepare_key(bbinary_key, key_size=256):
-    
-    # Assurer que bbinary_key est une chaîne de caractères
-    bbinary_key = str(bbinary_key)
-    
-    # Extension ou troncature de la clé à 256 bits
-    if len(bbinary_key) < 256:
-        bbinary_key = (bbinary_key * (256 // len(bbinary_key) + 1))[:256]
-    else:
-        bbinary_key = bbinary_key[:256]
-    
-    # Conversion de la chaîne binaire en bytes
-    binary_key_bytes = bytes((int(bbinary_key[i:i+8], 2) for i in range(0, 256, 8)))
-    
-    # Hashage SHA-256 pour obtenir la clé finale
-    sha256_hasher = hashlib.sha256()
-    sha256_hasher.update(binary_key_bytes)
-    final_key = sha256_hasher.digest()
-    return final_key
 
 def key_from_bits(bit_list):  
     """ Convertir une liste de bits en clé utilisable pour AES """
@@ -190,30 +169,14 @@ def encrypt_aes(plaintext, key):
     cipher = AES.new(key, AES.MODE_CBC)
     iv = cipher.iv
     ciphertext = cipher.encrypt(pad(plaintext.encode(), AES.block_size))
-    return iv + ciphertext
+    return base64.b64encode(iv + ciphertext).decode('utf-8')
 
-def decrypt_aes1(ciphertext, key):
+
+
+def decrypt_aes(ciphertext_b64, key):
     """ Déchiffrer un message en utilisant AES """
-     # Convertir en bytes si nécessaire (par exemple si en base64 ou hexadécimal)
-    if isinstance(ciphertext, str):
-        ciphertext = base64.b64decode(ciphertext)
-        
-    iv = ciphertext[:AES.block_size]
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    plaintext = unpad(cipher.decrypt(ciphertext[AES.block_size:]), AES.block_size)
-    return plaintext.decode()
-
-
-
-def decrypt_aes(ciphertext, key):
-    """ Déchiffrer un message en utilisant AES """
-    try:
-        ciphertext = base64.b64decode(ciphertext)
-    except base64.binascii.Error as e:
-        if padding_error := len(ciphertext) % 4:
-            ciphertext += b'=' * (4 - padding_error)
-        ciphertext = base64.b64decode(ciphertext)  # Réessayer le décodage
-
+    ciphertext = base64.b64decode(ciphertext_b64)
+    
     iv = ciphertext[:AES.block_size]
     cipher = AES.new(key, AES.MODE_CBC, iv)
     decrypted = cipher.decrypt(ciphertext[AES.block_size:])

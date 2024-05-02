@@ -1,38 +1,40 @@
-from Crypto.Cipher import AES
-from Crypto.Hash import SHA256
-from Crypto.Util.Padding import pad, unpad
-import os
+"""
+je voudrais que tu ecrive un code en Qt ou Tkinker pour simuler la communication entre Alice et Bob.
+sur l interface on a deux entre une pour host et l autre pour port
+ensuite il ya un champ de text ou l utilisateur entre le message(son nom, etc...)
+un autre champ pour envoyer le message.
+un champ pour recevoir le message(un peu comme dans l invite de commnade)
 
-def key_from_bits(bit_list):
-    """ Convertir une liste de bits en clé utilisable pour AES """
-    bit_string = ''.join(str(bit) for bit in bit_list)
-    key_raw = int(bit_string, 2).to_bytes((len(bit_string) + 7) // 8, byteorder='big')
-    hash = SHA256.new()
-    hash.update(key_raw)
-    return hash.digest()[:16]  # Retourner les 16 premiers bytes pour AES-128
 
-def encrypt(message, key):
-    """ Chiffrer un message en utilisant AES """
-    cipher = AES.new(key, AES.MODE_CBC)
-    iv = cipher.iv
-    ciphertext = cipher.encrypt(pad(message.encode(), AES.block_size))
-    return iv + ciphertext
+"""
 
-def decrypt(ciphertext, key):
-    """ Déchiffrer un message en utilisant AES """
-    iv = ciphertext[:AES.block_size]
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    plaintext = unpad(cipher.decrypt(ciphertext[AES.block_size:]), AES.block_size)
-    return plaintext.decode()
 
-# Exemple d'utilisation
-bit_list = [0, 1, 1, 1]  # Exemple de clé générée par BB84
-key = key_from_bits(bit_list)
-print(f"La cle est: {key}")
+import threading
+import queue
 
-message = "Hello, Quantum World!"
-ciphertext = encrypt(message, key)
-print("Ciphertext:", ciphertext)
+def receive_messages(sock, messages_queue):
+    """ Thread pour recevoir les messages et les mettre dans une queue. """
+    while True:
+        message = sock.recv(1024)  # Exemple de réception de message
+        if message:
+            messages_queue.put(message.decode())
 
-decrypted_message = decrypt(ciphertext, key)
-print("Decrypted message:", decrypted_message)
+def main_interaction(sock, name):
+    messages_queue = queue.Queue()
+    threading.Thread(target=receive_messages, args=(sock, messages_queue), daemon=True).start()
+    
+    while True:
+        # Vérifier si des messages sont disponibles dans la queue
+        try:
+            while not messages_queue.empty():
+                message = messages_queue.get_nowait()
+                print(f"\nReceived: {message}\n{name}:> ", end="")  # Afficher le message reçu
+        except queue.Empty:
+            pass
+
+        # Gérer l'entrée de l'utilisateur dans le thread principal
+        user_input = input(f"{name}:> ")
+        if user_input.lower() == "quit":
+            break
+        # Envoyer l'input quelque part, par exemple à un serveur ou à un autre thread
+

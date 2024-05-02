@@ -6,8 +6,8 @@ import numpy as np
 from read_file import read_file
 
 
-path_name = "Quantum/projekt_Quantik/kommu/chat4/token.txt"
-#path_name = "kommu/chat4/token.txt"
+#path_name = "Quantum/projekt_Quantik/kommu/chat4/token.txt"
+path_name = "kommu/chat4/token.txt"
 token = read_file(path_name)
 
 def prepare_qubits(bits, bases, token):
