@@ -10,8 +10,8 @@ from function import *
 from bb84 import checking, qber_key, bob_measure, calcul
 from read_file import read_file
 
-#token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
-path_name = "kommu/chat4/token.txt"
+path_name = "Quantum/projekt_Quantik/kommu/chat4/token.txt"
+#path_name = "kommu/chat4/token.txt"
 token = read_file(path_name)
 
 
@@ -289,7 +289,7 @@ def client(name):
                     print(f"qber: {qber}")
                     print(f"final key is: {final_key}")
                     if final_key:
-                        sha256_key = generate_sha256_key(final_key)
+                        sha256_key = key_from_bits(final_key)
                         print(f"New key is: {sha256_key}")
                         
                         if compter>=3:
@@ -317,9 +317,9 @@ def client(name):
             if compter >3:
                 while running:
                     try:
-                        thread_receive = threading.Thread(target=received_msg, args=(client_data, name, 'msg',  data_lock), daemon=False)
+                        thread_receive = threading.Thread(target=received_msg, args=(client_data, name, 'msg',  data_lock, sha256_key), daemon=False)
                         thread_receive.start()
-                        send_msg(sock, name)
+                        send_msg(sock, name, sha256_key)
 
                         thread_receive.join()
 

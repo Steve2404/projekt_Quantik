@@ -20,5 +20,5 @@ def read_file(path_name):
         sys.exit(1)
 
 if __name__ == "__main__":
-    print(read_file('kommu/chat4/token.txt'))
+    print(read_file('Quantum/projekt_Quantik/kommu/chat4/token.txt'))
 

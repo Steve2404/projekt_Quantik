@@ -1,17 +1,10 @@
 import socket
 import threading
 from function import *
-from read_file import read_file
+
 
 
 clients = {}
-
-
-
-#token = read_file("Quantum/projekt_Quantik/kommu/chat4/token.txt")
-path_name = "kommu/chat4/token.txt"
-token = read_file(path_name)
-
 
 def client(sock, addr):  
     global clients

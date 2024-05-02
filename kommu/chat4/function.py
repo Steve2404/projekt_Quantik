@@ -4,9 +4,9 @@ import socket
 import base64
 from bb84 import prepare_qubits
 import hashlib
-from Crypto.Cipher import AES, PKCS1_OAEP
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA256
 from Crypto.Util.Padding import pad, unpad
-from Crypto.PublicKey import RSA
 from qiskit import QuantumCircuit
 import qiskit_aer as qe
 from qiskit_ibm_provider import IBMProvider
@@ -110,28 +110,28 @@ def received(data, name, action, data_lock):
     
 
 running = True
-def received_msg(data, name, action, data_lock):
+def received_msg(data, name, action, data_lock, key):
     global running
     while running: 
         with data_lock:
             if data[name][action] is not None and data[name]['other'] is not None:
                 message = data[name][action]
-                #cipher_sms = decrypt_AES(key, message)
-                print(f"(ack:{data[name]['other']}): {message}")
+                plaintext = decrypt_aes(message, key)
+                print(f"(ack:{data[name]['other']}): {plaintext}")
                 data[name][action] = None
 
 
        
-def send_msg(sock, name):
+def send_msg(sock, name, key):
     global running
     while running:
         msg_content = input(f"{name}:> ")
-        #cipher_sms = cipher_AES(key, msg_content)
+        cipher_sms = encrypt_aes(msg_content, key)
         if msg_content.lower() == "quit":
             send(sock, "DISCONNECT", name)
             running = False
         else:      
-            send(sock, "MESSAGE", msg_content)
+            send(sock, "MESSAGE", cipher_sms)
 
 def print_info(name, O_name, basis, O_basis):
     print(f"{name} Basis is: {basis}")
@@ -156,24 +156,72 @@ def test(sock, client_data, name, data_lock, attempt):
 
 
 
+def prepare_key(bbinary_key, key_size=256):
+    
+    # Assurer que bbinary_key est une chaîne de caractères
+    bbinary_key = str(bbinary_key)
+    
+    # Extension ou troncature de la clé à 256 bits
+    if len(bbinary_key) < 256:
+        bbinary_key = (bbinary_key * (256 // len(bbinary_key) + 1))[:256]
+    else:
+        bbinary_key = bbinary_key[:256]
+    
+    # Conversion de la chaîne binaire en bytes
+    binary_key_bytes = bytes((int(bbinary_key[i:i+8], 2) for i in range(0, 256, 8)))
+    
+    # Hashage SHA-256 pour obtenir la clé finale
+    sha256_hasher = hashlib.sha256()
+    sha256_hasher.update(binary_key_bytes)
+    final_key = sha256_hasher.digest()
+    return final_key
 
-def cipher_RSA(qc_key, data):  # sourcery skip: remove-unreachable-code
-# Générez une clé RSA
-    key = RSA.generate(2048)
-    public_key = key.publickey()
-    encrypter = PKCS1_OAEP.new(public_key)
+def key_from_bits(bit_list):  
+    """ Convertir une liste de bits en clé utilisable pour AES """
+    bit_string = ''.join(str(bit) for bit in bit_list)
+    key_raw = int(bit_string, 2).to_bytes((len(bit_string) + 7) // 8, byteorder='big')
+    hash = SHA256.new()
+    hash.update(key_raw)
+    return hash.digest()[:16]  # Retourner les 16 premiers bytes pour AES-128
 
 
-def cipher_AES(key, data):
-    cipher = AES.new(key, AES.MODE_ECB)
-    return cipher.encrypt(pad(data.encode('utf-8'), AES.block_size))
+def encrypt_aes(plaintext, key):
+    """ Chiffrer un message en utilisant AES """
+    cipher = AES.new(key, AES.MODE_CBC)
+    iv = cipher.iv
+    ciphertext = cipher.encrypt(pad(plaintext.encode(), AES.block_size))
+    return iv + ciphertext
 
-def decrypt_AES(key, ciphertext):
-    cipher = AES.new(key, AES.MODE_ECB)
-    decrypted_data = unpad(cipher.decrypt(ciphertext), AES.block_size)
-    return decrypted_data.decode('utf-8')
+def decrypt_aes1(ciphertext, key):
+    """ Déchiffrer un message en utilisant AES """
+     # Convertir en bytes si nécessaire (par exemple si en base64 ou hexadécimal)
+    if isinstance(ciphertext, str):
+        ciphertext = base64.b64decode(ciphertext)
+        
+    iv = ciphertext[:AES.block_size]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = unpad(cipher.decrypt(ciphertext[AES.block_size:]), AES.block_size)
+    return plaintext.decode()
 
 
+
+def decrypt_aes(ciphertext, key):
+    """ Déchiffrer un message en utilisant AES """
+    try:
+        ciphertext = base64.b64decode(ciphertext)
+    except base64.binascii.Error as e:
+        if padding_error := len(ciphertext) % 4:
+            ciphertext += b'=' * (4 - padding_error)
+        ciphertext = base64.b64decode(ciphertext)  # Réessayer le décodage
+
+    iv = ciphertext[:AES.block_size]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    decrypted = cipher.decrypt(ciphertext[AES.block_size:])
+    plaintext = unpad(decrypted, AES.block_size)
+    return plaintext.decode()
+
+
+#******************************* Bell State ***************************************************
 
 
 # Simulating the creation of a Bell state
@@ -244,11 +292,5 @@ def eve_interception(qc, qubit_index):
 
     
 
-# Encrypting a message using one-time pad
-def encrypt_message(message, key):
-    return ''.join(str(int(message_bit) ^ int(key_bit)) for message_bit, key_bit in zip(message, key))
 
-# Deciphering a message
-def decrypt_message(encrypted_message, key):
-    return encrypt_message(encrypted_message, key) 
 
