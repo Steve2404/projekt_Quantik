@@ -61,19 +61,25 @@ class QuantumSpyClient(tk.Tk):
         self.nb_bits_entry.grid(row=1, column=1, padx=5, pady=5)
 
         # Connect/Disconnect buttons
-        self.connect_button = tk.Button(self, text="Connect", command=self.connect_to_server)
+        self.connect_button = tk.Button(
+            self, text="Connect", command=self.connect_to_server)
         self.connect_button.grid(row=0, column=4, padx=5, pady=5)
 
-        self.disconnect_button = tk.Button(self, text="Disconnect", command=self.disconnect_from_server, state='disabled')
+        self.disconnect_button = tk.Button(
+            self, text="Disconnect", command=self.disconnect_from_server, 
+            state='disabled')
         self.disconnect_button.grid(row=0, column=5, padx=5, pady=5)
 
         # Clear Log Button
-        self.clear_button = tk.Button(self, text="Clear Log", command=self.clear_log)
+        self.clear_button = tk.Button(
+            self, text="Clear Log", command=self.clear_log)
         self.clear_button.grid(row=0, column=6, padx=5, pady=5)
 
         # Log Text Area
-        self.log_text = scrolledtext.ScrolledText(self, height=15, state='disabled')
-        self.log_text.grid(row=2, column=0, columnspan=7, sticky='we', padx=5, pady=5)
+        self.log_text = scrolledtext.ScrolledText(
+            self, height=15, state='disabled')
+        self.log_text.grid(
+            row=2, column=0, columnspan=7, sticky='we', padx=5, pady=5)
 
     def connect_to_server(self):
         host = self.host_entry.get()
@@ -108,10 +114,14 @@ class QuantumSpyClient(tk.Tk):
         self.log_text.config(state='disabled')
 
     def receive_messages(self):
+        buffer = ""
         while self.sock:
             try:
-                if data := self.sock.recv(4096):
-                    self.message_queue.put(data)
+                if data := self.sock.recv(4096).decode():
+                    buffer += data
+                    while "<END>" in buffer:
+                        message, buffer = buffer.split("<END>", 1)
+                        self.message_queue.put(message)
                 else:
                     self.display_message("Server closed the connection.")
                     break
@@ -123,38 +133,38 @@ class QuantumSpyClient(tk.Tk):
 
     def process_messages(self):
         while not self.message_queue.empty():
-            data = self.message_queue.get()
-            action, content = decode_message(data)
+            message = self.message_queue.get()
+            action, content = decode_message(message.encode())
             self.process_server_message(action, content)
         self.after(100, self.process_messages)
 
     def process_server_message(self, action, content):
-        """Process the messages from the server."""
         if action == "QC":
+            
             qc_str = base64.b64decode(content).decode('utf-8')
             qc = QuantumCircuit.from_qasm_str(qc_str)
             qc = intercept_measure(qc, self.base)
-            self.display_message(qc.draw())
+            #self.display_message(qc.draw())
             qc_str = qc.qasm()
             qc_qasm = base64.b64encode(qc_str.encode()).decode('utf-8')
             self.send("QC", qc_qasm)
             self.display_message("Sending intercepted QC to server")
         else:
-            self.display_message(f"Received message: {action}: {content}")
+            self.display_message(f"Received message: {action}: {content}"\
+                .replace("<END>", ""))
 
     def display_message(self, message):
-        """Display a message in the log text area."""
         self.log_text.config(state='normal')
         self.log_text.insert('end', f"{message}\n")
         self.log_text.config(state='disabled')
 
     def send(self, action, content):
-        """Send a message via the socket."""
-        message = f"{action}:{content}".encode()
+        message = f"{action}:{content}"
         try:
-            self.sock.sendall(message)
+            self.sock.sendall(message.encode())
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to send message: {e}")
+            messagebox.showerror(
+                "Error", f"Failed to send message: {e}")
             if self.sock:
                 self.sock.close()
                 self.sock = None
