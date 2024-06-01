@@ -8,12 +8,14 @@ from read_file import read_file
 
 
 # path_name = "Quantum/projekt_Quantik/kommu/chat4/token.txt"
-path_name = "kommu/chat4/token.txt"
+
+path_name = "kommu/chat4/GUI/token.txt"
 token = read_file(path_name)
+
+#token = read_file("token.txt")
 
 
 def prepare_qubits(bits, bases, token):
-    """Alice prepares the qubits"""
     IBMProvider.save_account(token, overwrite=True)
 
     qc = QuantumCircuit(len(bits), len(bases))
@@ -28,7 +30,6 @@ def prepare_qubits(bits, bases, token):
 
 
 def intercept_measure(qc, bases):
-    """Eve intercepts and measures the qubits"""
     for i in range(len(bases)):
         if bases[i] == 1:  # Eve chooses a basis
             qc.h(i)
@@ -38,7 +39,6 @@ def intercept_measure(qc, bases):
 
 
 def bob_measure(qc, bases):
-    """Bob measures the qubits"""
     for i in range(len(bases)):
         if bases[i] == 1:  # Diagonal basis chosen by Bob
             qc.h(i)
@@ -98,19 +98,18 @@ def qber_key(expeditor_key, receiver_key, choice_index, key):
     return True, qber_key, final_key
     #return True, qber_key
 
-
-def calcul(qc, backend="qasm_simulator"):
-    # simulator_mps
-    # provider = IBMProvider()
-
-    # Execution of the circuit
-    # simulator = provider.get_backend(backend)
-    #
-    # job = simulator.run(transpile(qc, simulator), shots=1, memory=True)
-    # job_id = job.job_id()
-    # retrieved_job = provider.retrieve_job(job_id)
-    # result = retrieved_job.result()
-    # measurements = result.get_memory()[0]
+#backend = "ibm_kyoto"
+#backend = "qasm_simulator"
+backend = "ibm_sherbrooke"
+def calcul(qc, backend=backend):
+    # simulator_mps on IBM Server
+    #provider = IBMProvider()
+    #simulator = provider.get_backend(backend)
+    #job = simulator.run(transpile(qc, simulator), shots=1, memory=True)
+    #job_id = job.job_id()
+    #retrieved_job = provider.retrieve_job(job_id)
+    #result = retrieved_job.result()
+    #measurements = result.get_memory()[0]
 
     # Simulator
     simulator = qe.Aer.get_backend(backend)

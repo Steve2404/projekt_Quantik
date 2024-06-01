@@ -6,6 +6,7 @@ import time
 import tkinter as tk
 from tkinter import simpledialog, messagebox, scrolledtext
 from qiskit import QuantumCircuit
+from qiskit.qasm2 import dumps
 from qiskit_ibm_provider import IBMProvider
 import base64
 import numpy as np
@@ -15,8 +16,11 @@ from read_file import read_file
 from bb84 import *
 
 # Configuration
-path_name = "kommu/chat4/token.txt"
+#path_name = "kommu/chat4/token.txt"
+
+path_name = "kommu/chat4/GUI/token.txt"
 token = read_file(path_name)
+#token = read_file("token.txt")
 
 default_n_bits = 20
 max_attempts = 3
@@ -729,7 +733,7 @@ class QuantumChatClient(tk.Tk):
         
         basis, bits = self.generate_bb84_data(nb_bits)
         qc = prepare_qubits(bits, basis, token)
-        qc_str = qc.qasm()
+        qc_str = dumps(qc)
         qasm_circuit = base64.b64encode(qc_str.encode()).decode('utf-8')
 
         self.send("QC", qasm_circuit)

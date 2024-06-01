@@ -3,6 +3,7 @@ import threading
 import tkinter as tk
 from tkinter import messagebox, scrolledtext
 from qiskit import QuantumCircuit
+from qiskit.qasm2 import dumps
 import base64
 import queue
 import numpy as np
@@ -145,7 +146,7 @@ class QuantumSpyClient(tk.Tk):
             qc = QuantumCircuit.from_qasm_str(qc_str)
             qc = intercept_measure(qc, self.base)
             #self.display_message(qc.draw())
-            qc_str = qc.qasm()
+            qc_str = dumps(qc)
             qc_qasm = base64.b64encode(qc_str.encode()).decode('utf-8')
             self.send("QC", qc_qasm)
             self.display_message("Sending intercepted QC to server")

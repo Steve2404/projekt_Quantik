@@ -1,11 +1,45 @@
-pyinstaller --onefile \
+pyinstaller --onefile --windowed \
   --add-data '/home/steve/Dokumente/Script/projekt_Quantik/.venv/lib/python3.11/site-packages/qiskit_ibm_provider/VERSION.txt:qiskit_ibm_provider/' \
   --add-data '/home/steve/Dokumente/Script/projekt_Quantik/.venv/lib/python3.11/site-packages/qiskit/VERSION.txt:qiskit/' \
   --add-data '/home/steve/Dokumente/Script/projekt_Quantik/.venv/lib/python3.11/site-packages/qiskit_aer/VERSION.txt:qiskit_aer/' \
   --add-data '/home/steve/Dokumente/Script/projekt_Quantik/kommu/chat4/token.txt:kommu/chat4/' \
   --add-data '/home/steve/Dokumente/Script/projekt_Quantik/.venv/lib/python3.11/site-packages/qiskit/qasm/libs:qiskit/qasm/libs' \
-  spion.py
-
+  sender.py
+# ('/home/steve/Dokumente/Script/projekt_Quantik/.venv/lib/python3.11/site-packages/qiskit/VERSION.txt', 'qiskit/'), ('/home/steve/Dokumente/Script/projekt_Quantik/.venv/lib/python3.11/site-packages/qiskit_aer/VERSION.txt', 'qiskit_aer/'), ('/home/steve/Dokumente/Script/projekt_Quantik/kommu/chat4/GUI/token.txt', 'kommu/chat4/GUI'), ('/home/steve/Dokumente/Script/projekt_Quantik/.venv/lib/python3.11/site-packages/qiskit/qasm/libs', 'qiskit/qasm/libs'), ('/home/steve/Dokumente/Script/projekt_Quantik/.venv/lib/python3.11/site-packages/qiskit_ibm_provider/VERSION.txt', 'qiskit_ibm_provider/')
 
 curl -sSL https://install.python-poetry.org | python3 -
+pyinstaller --onefile --windowed --hidden-import=_bootlocale main.py
+pyinstaller myapp.spec
+chmod +x votre_programme
+./main
+
+pyinstaller --onefile --windowed --noconfirm main.py
+ldd dist/main
+
+# Mettre à jour le système et installer les dépendances Tkinter
+sudo apt update
+sudo apt install python3-tk python3-venv
+
+# Créer et activer un environnement virtuel
+python3 -m venv myenv
+source myenv/bin/activate
+
+# Installer PyInstaller
+pip install pyinstaller
+
+# Créer le fichier server_gui.py (ajouter le code Tkinter ci-dessus)
+
+# Générer l'exécutable
+pyinstaller --onefile --windowed --noconfirm server_gui.py
+
+# Vérifier les permissions
+chmod +x dist/server_gui
+
+# Exécuter l'exécutable
+./dist/server_gui
+
+pyinstaller --onefile --windowed --add-data "/path/to/qiskit/qasm/libs:qiskit/qasm/libs" spion.py
+
+
+
 
