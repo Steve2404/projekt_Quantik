@@ -91,11 +91,17 @@ class QuantumChatServer(tk.Tk):
         self.display_message("Stopping server...")
         self.server_running = False
         if server_socket:
-            server_socket.shutdown(socket.SHUT_RDWR)
+            try:
+                server_socket.shutdown(socket.SHUT_RDWR)  
+                server_socket.close()
+            except OSError as e:
+                print(e)
+                messagebox.showerror("Error", 
+                                 f"Error shutting down the socket: {e}")
             server_socket = None
-        if server_thread:
-            server_thread.join()
-        clients.clear()
+        #if server_thread:
+        #    server_thread.join()
+        #clients.clear()
         self.display_message("Server stopped.")
         self.start_button.config(state='normal')
         self.stop_button.config(state='disabled')
