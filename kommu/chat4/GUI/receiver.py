@@ -16,9 +16,15 @@ from read_file import read_file
 from bb84 import *
 
 # Configuration
-#path_name = "kommu/chat4/token.txt"
 
+# windows:
+# path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
+# path_name = "token/token.txt" # for executable programm
+
+# ubuntu:
 path_name = "kommu/chat4/GUI/token.txt"
+#path_name = "kommu/chat4/token.txt" # for executable programm
+
 token = read_file(path_name)
 #token = read_file("token.txt")
 
@@ -466,8 +472,33 @@ class QuantumChatClient(tk.Tk):
                     ("You are the sender." 
                      if self.role.startswith('s') else 
                      "You are the receiver."))
+                # check if the key yet available
                 if self.role.startswith('s'):
+                    if existing_key := get_key(
+                        self.client_name, self.other_name
+                    ):
+                        self.key = existing_key
+                        messagebox.showinfo(
+                            "Info",
+                            f"Using existing key for {self.other_name}"
+                        )
+                        self.send_message_button.config(state='normal')
+                        self.clear_log()
+                        return
                     self.sender_init(self.get_n_bits())
+                elif self.role.startswith('r'):
+                    if existing_key := get_key(
+                        self.other_name, self.client_name 
+                    ):
+                        self.key = existing_key
+                        messagebox.showinfo(
+                            "Info",
+                            f"Using existing key for {self.other_name}"
+                        )
+                        self.send_message_button.config(state='normal')
+                        self.clear_log()
+                        return
+                    
 
         elif action in ["basis", "BASIS"]:           
             self.O_basis = deconcatenate_data(content)
@@ -617,6 +648,8 @@ class QuantumChatClient(tk.Tk):
                 self.display_message(f"The AES key is: {self.key}")
 
                 if self.compter >= 3 and self.O_response:
+                    init_db()
+                    store_key(self.client_name, self.other_name, self.key)
                     messagebox.showinfo(
                         "Info", 
                         decision(self.response))
@@ -707,6 +740,8 @@ class QuantumChatClient(tk.Tk):
                 self.display_message(f"The AES key is: {self.key}")
 
                 if self.compter >= 3 and self.O_response:
+                    init_db()
+                    store_key(self.other_name, self.client_name, self.key)
                     messagebox.showinfo(
                         "Info", 
                         decision(self.response))
@@ -796,16 +831,6 @@ class QuantumChatClient(tk.Tk):
             messagebox.showerror("Error", 
                                 f"Failed to send disconnect message: {e}")
 
-        try:
-            self.sock.shutdown(socket.SHUT_RDWR)  
-            self.sock.close()
-        except OSError as e:
-            messagebox.showerror("Error", 
-                                 f"Error shutting down the socket: {e}")
-        except Exception as general_error:
-            messagebox.showerror(
-                "Error", 
-                f"An error occurred while closing the socket: {general_error}")
 
         self.connect_button.config(state='normal')
         self.disconnect_button.config(state='disabled')

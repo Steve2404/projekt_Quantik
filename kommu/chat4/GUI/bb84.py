@@ -7,11 +7,17 @@ import matplotlib.pyplot as plt
 from read_file import read_file
 
 
-# path_name = "Quantum/projekt_Quantik/kommu/chat4/token.txt"
+# Configuration
 
+# windows:
+# path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
+# path_name = "token/token.txt" # for executable programm
+
+# ubuntu:
 path_name = "kommu/chat4/GUI/token.txt"
-token = read_file(path_name)
+#path_name = "kommu/chat4/token.txt" # for executable programm
 
+token = read_file(path_name)
 #token = read_file("token.txt")
 
 
@@ -49,7 +55,8 @@ def bob_measure(qc, bases):
     return qc
 
 
-def checking(nb_bits, alice_basis, bob_basis, bits, bit_choice, choice_index=None):
+def checking(nb_bits, alice_basis, bob_basis, bits, 
+             bit_choice, choice_index=None):
     if len(bits) > nb_bits:
         raise IndexError("Impossible : index out of range")
     else:
@@ -60,7 +67,8 @@ def checking(nb_bits, alice_basis, bob_basis, bits, bit_choice, choice_index=Non
     if choice_index is None:
         if len(key) < bit_choice:
             raise ValueError(
-                "The number of bits to be selected is greater than the number of bits available.")
+                "The number of bits to be selected is greater than "\
+                "the number of bits available.")
         # Random choice without replacement
         choice_index = np.random.choice(len(key), bit_choice, replace=False)
 
@@ -98,9 +106,12 @@ def qber_key(expeditor_key, receiver_key, choice_index, key):
     return True, qber_key, final_key
     #return True, qber_key
 
-#backend = "ibm_kyoto"
-#backend = "qasm_simulator"
-backend = "ibm_sherbrooke"
+# IBM Backend: 
+# backend = "ibm_kyoto"
+# backend = "ibm_sherbrooke"
+
+# Simulator Backend:
+backend = "qasm_simulator"
 def calcul(qc, backend=backend):
     # simulator_mps on IBM Server
     #provider = IBMProvider()
@@ -151,12 +162,14 @@ if __name__ == '__main__':
     # measurements = result.get_memory()[0]
     # ******************** Alice Seite: ***************************
 
-    print("********************** Alice Seite ********************************")
+    print("********************** Alice Seite ******************************")
     choice_index_alice, check_bits_alice, alice_key = checking(
-        nb_bits=nb_bits, alice_basis=alice_basis, bob_basis=bob_basis, bits=alice_bits, bit_choice=5)
+        nb_bits=nb_bits, alice_basis=alice_basis, bob_basis=bob_basis, 
+        bits=alice_bits, bit_choice=5)
 
     choice_index_bob, check_bits_bob, bob_key = checking(
-        nb_bits=nb_bits, alice_basis=alice_basis, bob_basis=bob_basis, bits=bob_bits, bit_choice=5, choice_index=choice_index_alice)
+        nb_bits=nb_bits, alice_basis=alice_basis, bob_basis=bob_basis, 
+        bits=bob_bits, bit_choice=5, choice_index=choice_index_alice)
 
     print(f"Alice key            : {alice_key}")
     print(f"Alice Basis          : {alice_basis}")

@@ -13,6 +13,19 @@ from read_file import read_file
 from function import *
 
 # Configuration
+
+
+# windows:
+# path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
+# path_name = "token/token.txt" # for executable programm
+
+# ubuntu:
+path_name = "kommu/chat4/GUI/token.txt"
+#path_name = "kommu/chat4/token.txt" # for executable programm
+
+token = read_file(path_name)
+#token = read_file("token.txt")
+
 path_name = "kommu/chat4/token.txt"
 token = read_file(path_name)
 default_n_bits = 20
