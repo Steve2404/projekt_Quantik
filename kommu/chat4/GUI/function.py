@@ -2,6 +2,7 @@ import base64
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto.Util.Padding import pad, unpad
+import sqlite3
 
 
 
@@ -10,7 +11,7 @@ def send(sock, msg_type, msg_content):
     sock.sendall(message.encode())
     
     
-##******************************************* EVE ********************************************************** 
+##***************************** EVE ******************************************
 def send_to_eve(data, msg_type, message):
     # Check if Eve is connected
     if 'Eve' in data and data['Eve']['conn']:
@@ -21,7 +22,7 @@ def send_to_eve(data, msg_type, message):
             print("Could not send message to Eve:", e)
 
 
-##***************************************** Message *************************************************
+##**************************** Message ***************************************
 def decode_message(data):
     action,_ , content = data.partition(b':')
     return action.decode(), content.decode()
@@ -33,7 +34,7 @@ def deconcatenate_data(data):
     return list(map(int, data.split(",")))
 
 
-##********************************************** BB84 **************************************************
+##*************************** BB84 *******************************************
 def decision(response):
     if response:
         return "The key is secure. We can continue the conversation."
@@ -42,14 +43,15 @@ def decision(response):
     
 
 def key_from_bits(bit_list):  
-    """ Convertir une liste de bits en clé utilisable pour AES """
+    """Convert a list of bits into a key usable for AES"""
     bit_string = ''.join(str(bit) for bit in bit_list)
-    key_raw = int(bit_string, 2).to_bytes((len(bit_string) + 7) // 8, byteorder='big')
+    key_raw = int(bit_string, 2).to_bytes(
+        (len(bit_string) + 7) // 8, byteorder='big')
     hash = SHA256.new()
     hash.update(key_raw)
     return hash.digest()[:16]  # Return the first 16 bytes for AES-128
 
-##******************************** AES Protocol ******************************************
+##********************** AES Protocol ****************************************
 def encrypt_aes(plaintext, key):
     cipher = AES.new(key, AES.MODE_CBC)
     iv = cipher.iv
@@ -67,10 +69,7 @@ def decrypt_aes(ciphertext_b64, key):
     plaintext = unpad(decrypted, AES.block_size)
     return plaintext.decode()
 
-# ****************************** DB ***************************************
-
-import sqlite3
-
+# ****************************** DB ******************************************
 def init_db():
     conn = sqlite3.connect('keys.db')
     cursor = conn.cursor()

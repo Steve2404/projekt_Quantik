@@ -450,10 +450,10 @@ class QuantumChatClient(tk.Tk):
             messagebox.showinfo("Acknowledgement", message)
             self.display_message(f"Your Partner Name is: {self.other_name}")
             self.display_message(f"Ack: {message}")
-            
-            
             self.prompt_role()
-        elif action == "ROLE":    
+            
+        elif action == "ROLE": 
+            init_db()   
             if self.role == content:
                 messagebox.showinfo(
                     "Role", 
@@ -471,7 +471,8 @@ class QuantumChatClient(tk.Tk):
                      if self.role.startswith('s') else 
                      "You are the receiver."))
                 if self.role.startswith('s'):
-                    if existing_key := get_key(self.client_name, self.other_name):
+                    if existing_key := get_key(
+                        self.client_name, self.other_name):
                         self.key = existing_key
                         messagebox.showinfo(
                             "Info",
@@ -481,7 +482,8 @@ class QuantumChatClient(tk.Tk):
                         return
                     self.sender_init(self.get_n_bits())
                 elif self.role.startswith('r'): 
-                    if existing_key := get_key(self.other_name, self.client_name):
+                    if existing_key := get_key(
+                        self.other_name, self.client_name):
                         self.key = existing_key
                         messagebox.showinfo(
                             "Info",
@@ -605,6 +607,7 @@ class QuantumChatClient(tk.Tk):
             self.send("Exception", f"Error: {e}".replace("<END>", ""))
             messagebox.showerror("Erreur", str(e))
             self.restart_protocol()
+            return
                 
         self.display_message(f"The chosen indexes are: {self.choice_index}")
         
@@ -623,6 +626,7 @@ class QuantumChatClient(tk.Tk):
             self.send("Exception", f"Error: {e}".replace("<END>", ""))
             messagebox.showerror("Error", str(e))
             self.restart_protocol()
+            return
             
         self.send("RESP", f"{self.response}")
         
@@ -682,6 +686,7 @@ class QuantumChatClient(tk.Tk):
             self.backend = ""
             self.prompt_backend()
             self.restart_protocol()
+            return
         self.display_message(f"{self.client_name} Bits is: {self.bits}")
 
     def receiver_basis(self):
@@ -703,6 +708,7 @@ class QuantumChatClient(tk.Tk):
         except Exception as e:
             self.send("Exception", f"Error: {e}".replace("<END>", ""))
             messagebox.showerror("Error", str(e))
+            return
             
         self.send("CHECK", concatenate_data(self.check_bits))
 
@@ -717,6 +723,7 @@ class QuantumChatClient(tk.Tk):
         except Exception as e:
             self.send("Exception", f"Error: {e}".replace("<END>", ""))
             messagebox.showerror("Error", str(e))
+            return
 
         self.send("RESP", f"{self.response}")
 

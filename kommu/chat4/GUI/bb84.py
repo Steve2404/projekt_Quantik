@@ -24,7 +24,7 @@ def prepare_qubits(bits, bases, token):
 
     qc = QuantumCircuit(len(bits), len(bases))
     for i in range(len(bits)):
-        if bits[i] == 1:  # Apply Gate X if the bit is 1 to put it in the state |1>
+        if bits[i] == 1:   # Apply Gate X if the bit is 1 to put it in the state |1>
             qc.x(i)
         if bases[i] == 1:  # Diagonale Basis
             qc.h(i)
@@ -64,7 +64,8 @@ def checking(nb_bits, alice_basis, bob_basis, bits, bit_choice, choice_index=Non
     if choice_index is None:
         if len(key) < bit_choice:
             raise ValueError(
-                "The number of bits to be selected is greater than the number of bits available.")
+                "The number of bits to be selected is greater than "\
+                f"the number of bits available({len(key)} bits).")
         # Random choice without replacement
         choice_index = np.random.choice(len(key), bit_choice, replace=False)
 
@@ -77,7 +78,8 @@ def checking(nb_bits, alice_basis, bob_basis, bits, bit_choice, choice_index=Non
 def qber_key(expeditor_key, receiver_key, choice_index, key):
     qber_key = None
     # Calculation of QBER
-    if len(choice_index) == 0 or len(expeditor_key) == 0 or len(receiver_key) == 0:
+    if (len(choice_index) == 0 or len(expeditor_key) == 0 or 
+        len(receiver_key) == 0):
         qber_key = 1.0
         raise IndexError("Impossible : index out of range")
     else:
@@ -149,18 +151,16 @@ if __name__ == '__main__':
     print(qc.draw())
     bob_bits = calcul(qc)
 
-    # simulation = qe.Aer.get_backend('qasm_simulator')
-    # job = simulation.run(transpile(qc, simulation), shots=1, memory=True)
-    # result = job.result()
-    # measurements = result.get_memory()[0]
-    # ******************** Alice Seite: ***************************
+    # ******************** Alice Seite: *************************************
 
-    print("********************** Alice Seite ********************************")
+    print("********************** Alice Seite ******************************")
     choice_index_alice, check_bits_alice, alice_key = checking(
-        nb_bits=nb_bits, alice_basis=alice_basis, bob_basis=bob_basis, bits=alice_bits, bit_choice=5)
+        nb_bits=nb_bits, alice_basis=alice_basis, bob_basis=bob_basis, 
+        bits=alice_bits, bit_choice=5)
 
     choice_index_bob, check_bits_bob, bob_key = checking(
-        nb_bits=nb_bits, alice_basis=alice_basis, bob_basis=bob_basis, bits=bob_bits, bit_choice=5, choice_index=choice_index_alice)
+        nb_bits=nb_bits, alice_basis=alice_basis, bob_basis=bob_basis, 
+        bits=bob_bits, bit_choice=5, choice_index=choice_index_alice)
 
     print(f"Alice key            : {alice_key}")
     print(f"Alice Basis          : {alice_basis}")
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     print(f"QBER of Alice: {qber_alice}")
     print(response_alice)
 
-    # ********************** BoB ********************************
+    # ************************** BoB ***************************************
 
     print("********************** Bob Seite ********************************")
     print(f"bob key              : {bob_key}")
