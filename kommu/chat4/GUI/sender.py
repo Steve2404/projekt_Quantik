@@ -387,6 +387,7 @@ class QuantumChatClient(tk.Tk):
         self.after(100, self.process_messages)
 
     def process_server_message(self, action, content):
+        # sourcery skip: extract-duplicate-method
         if action == "ERROR":
             messagebox.showerror("Error", content)
             self.display_error(content)
@@ -451,11 +452,10 @@ class QuantumChatClient(tk.Tk):
             messagebox.showinfo("Acknowledgement", message)
             self.display_message(f"Your Partner Name is: {self.other_name}")
             self.display_message(f"Ack: {message}")
-            # verify that client key generated
-            
-            
             self.prompt_role()
-        elif action == "ROLE":    
+            
+        elif action == "ROLE":
+            init_db()    
             if self.role == content:
                 messagebox.showinfo(
                     "Role", 
@@ -615,6 +615,7 @@ class QuantumChatClient(tk.Tk):
             self.send("Exception", f"Error: {e}".replace("<END>", ""))
             messagebox.showerror("Erreur", str(e))
             self.restart_protocol()
+            return
                 
         self.display_message(f"The chosen indexes are: {self.choice_index}")
         
@@ -633,6 +634,7 @@ class QuantumChatClient(tk.Tk):
             self.send("Exception", f"Error: {e}".replace("<END>", ""))
             messagebox.showerror("Error", str(e))
             self.restart_protocol()
+            return
             
         self.send("RESP", f"{self.response}")
         
@@ -692,8 +694,8 @@ class QuantumChatClient(tk.Tk):
             self.backend = ""
             self.prompt_backend()
             self.restart_protocol()
+            return
         self.display_message(f"{self.client_name} Bits is: {self.bits}")
-        #self.display_message(self.qc.draw())
 
     def receiver_basis(self):
         self.display_message(f"{self.client_name} Basis is: {self.basis}")
@@ -714,6 +716,7 @@ class QuantumChatClient(tk.Tk):
         except Exception as e:
             self.send("Exception", f"Error: {e}".replace("<END>", ""))
             messagebox.showerror("Error", str(e))
+            return
             
         self.send("CHECK", concatenate_data(self.check_bits))
 
@@ -728,6 +731,7 @@ class QuantumChatClient(tk.Tk):
         except Exception as e:
             self.send("Exception", f"Error: {e}".replace("<END>", ""))
             messagebox.showerror("Error", str(e))
+            return
 
         self.send("RESP", f"{self.response}")
 

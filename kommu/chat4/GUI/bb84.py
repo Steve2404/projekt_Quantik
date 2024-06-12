@@ -68,7 +68,7 @@ def checking(nb_bits, alice_basis, bob_basis, bits,
         if len(key) < bit_choice:
             raise ValueError(
                 "The number of bits to be selected is greater than "\
-                "the number of bits available.")
+                f"the number of bits available({len(key)} bits).")
         # Random choice without replacement
         choice_index = np.random.choice(len(key), bit_choice, replace=False)
 
@@ -81,7 +81,8 @@ def checking(nb_bits, alice_basis, bob_basis, bits,
 def qber_key(expeditor_key, receiver_key, choice_index, key):
     qber_key = None
     # Calculation of QBER
-    if len(choice_index) == 0 or len(expeditor_key) == 0 or len(receiver_key) == 0:
+    if (len(choice_index) == 0 or len(expeditor_key) == 0 or 
+        len(receiver_key) == 0):
         qber_key = 1.0
         raise IndexError("Impossible : index out of range")
     else:
@@ -156,10 +157,6 @@ if __name__ == '__main__':
     print(qc.draw())
     bob_bits = calcul(qc)
 
-    # simulation = qe.Aer.get_backend('qasm_simulator')
-    # job = simulation.run(transpile(qc, simulation), shots=1, memory=True)
-    # result = job.result()
-    # measurements = result.get_memory()[0]
     # ******************** Alice Seite: ***************************
 
     print("********************** Alice Seite ******************************")
