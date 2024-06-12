@@ -15,12 +15,16 @@ from function import *
 from read_file import read_file
 from bb84 import *
 
-# Configuration
-#path_name = "kommu/chat4/token.txt"
+# windows
+path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
+#path_name = "token/token.txt"
 
-path_name = "kommu/chat4/GUI/token.txt"
-token = read_file(path_name)
+# ubuntu
+#path_name = "kommu/chat4/GUI/token.txt"
 #token = read_file("token.txt")
+
+
+token = read_file(path_name)
 
 default_n_bits = 20
 max_attempts = 3
@@ -208,6 +212,7 @@ class QuantumChatClient(tk.Tk):
                         "Partner", 
                         "Enter the name of the client you wish to connect to:", 
                          parent=self).strip().capitalize():
+                    
                     self.send("CONNECT", partner_name)
                     break
                 else:
@@ -445,7 +450,6 @@ class QuantumChatClient(tk.Tk):
             messagebox.showinfo("Acknowledgement", message)
             self.display_message(f"Your Partner Name is: {self.other_name}")
             self.display_message(f"Ack: {message}")
-            # verify that client key generated
             
             
             self.prompt_role()
@@ -467,7 +471,24 @@ class QuantumChatClient(tk.Tk):
                      if self.role.startswith('s') else 
                      "You are the receiver."))
                 if self.role.startswith('s'):
+                    if existing_key := get_key(self.client_name, self.other_name):
+                        self.key = existing_key
+                        messagebox.showinfo(
+                            "Info",
+                            f"Using existing key for {self.other_name}")
+                        self.send_message_button.config(state='normal')
+                        self.clear_log()
+                        return
                     self.sender_init(self.get_n_bits())
+                elif self.role.startswith('r'): 
+                    if existing_key := get_key(self.other_name, self.client_name):
+                        self.key = existing_key
+                        messagebox.showinfo(
+                            "Info",
+                            f"Using existing key for {self.other_name}")
+                        self.send_message_button.config(state='normal')
+                        self.clear_log()
+                        return
 
         elif action in ["basis", "BASIS"]:           
             self.O_basis = deconcatenate_data(content)
@@ -617,6 +638,8 @@ class QuantumChatClient(tk.Tk):
                 self.display_message(f"The AES key is: {self.key}")
 
                 if self.compter >= 3 and self.O_response:
+                    init_db()
+                    store_key(self.client_name, self.other_name, self.key)
                     messagebox.showinfo(
                         "Info", 
                         decision(self.response))
@@ -660,7 +683,6 @@ class QuantumChatClient(tk.Tk):
             self.prompt_backend()
             self.restart_protocol()
         self.display_message(f"{self.client_name} Bits is: {self.bits}")
-        #self.display_message(self.qc.draw())
 
     def receiver_basis(self):
         self.display_message(f"{self.client_name} Basis is: {self.basis}")
@@ -707,6 +729,8 @@ class QuantumChatClient(tk.Tk):
                 self.display_message(f"The AES key is: {self.key}")
 
                 if self.compter >= 3 and self.O_response:
+                    init_db()
+                    store_key(self.other_name, self.client_name, self.key)
                     messagebox.showinfo(
                         "Info", 
                         decision(self.response))
@@ -796,16 +820,6 @@ class QuantumChatClient(tk.Tk):
             messagebox.showerror("Error", 
                                 f"Failed to send disconnect message: {e}")
 
-        try:
-            self.sock.shutdown(socket.SHUT_RDWR)  
-            self.sock.close()
-        except OSError as e:
-            messagebox.showerror("Error", 
-                                 f"Error shutting down the socket: {e}")
-        except Exception as general_error:
-            messagebox.showerror(
-                "Error", 
-                f"An error occurred while closing the socket: {general_error}")
 
         self.connect_button.config(state='normal')
         self.disconnect_button.config(state='disabled')

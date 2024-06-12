@@ -13,7 +13,16 @@ from read_file import read_file
 from function import *
 
 # Configuration
-path_name = "kommu/chat4/token.txt"
+
+# windows
+#path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
+path_name = "token/token.txt"
+
+# ubuntu
+#path_name = "kommu/chat4/GUI/token.txt"
+#token = read_file("token.txt")
+
+
 token = read_file(path_name)
 default_n_bits = 20
 HOST = "localhost"
@@ -103,7 +112,8 @@ class QuantumSpyClient(tk.Tk):
 
     def disconnect_from_server(self):
         if self.sock:
-            self.sock.shutdown(socket.SHUT_RDWR)
+            # self.sock.shutdown(socket.SHUT_RDWR)
+            self.socket.close()
             self.sock = None
             self.connect_button.config(state='normal')
             self.disconnect_button.config(state='disabled')

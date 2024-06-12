@@ -92,7 +92,7 @@ class QuantumChatServer(tk.Tk):
         self.server_running = False
         if server_socket:
             try:
-                server_socket.shutdown(socket.SHUT_RDWR)  
+                #server_socket.shutdown(socket.SHUT_RDWR)  
                 server_socket.close()
             except OSError as e:
                 print(e)

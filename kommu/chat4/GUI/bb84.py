@@ -7,12 +7,16 @@ import matplotlib.pyplot as plt
 from read_file import read_file
 
 
-# path_name = "Quantum/projekt_Quantik/kommu/chat4/token.txt"
+# windows
+path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
+#path_name = "token/token.txt"
 
-path_name = "kommu/chat4/GUI/token.txt"
-token = read_file(path_name)
-
+# ubuntu
+#path_name = "kommu/chat4/GUI/token.txt"
 #token = read_file("token.txt")
+
+
+token = read_file(path_name)
 
 
 def prepare_qubits(bits, bases, token):
@@ -99,8 +103,8 @@ def qber_key(expeditor_key, receiver_key, choice_index, key):
     #return True, qber_key
 
 #backend = "ibm_kyoto"
-#backend = "qasm_simulator"
-backend = "ibm_sherbrooke"
+backend = "qasm_simulator"
+#backend = "ibm_sherbrooke"
 def calcul(qc, backend=backend):
     # simulator_mps on IBM Server
     #provider = IBMProvider()

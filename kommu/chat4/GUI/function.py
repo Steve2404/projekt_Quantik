@@ -51,7 +51,6 @@ def key_from_bits(bit_list):
 
 ##******************************** AES Protocol ******************************************
 def encrypt_aes(plaintext, key):
-    """ Chiffrer un message en utilisant AES """
     cipher = AES.new(key, AES.MODE_CBC)
     iv = cipher.iv
     ciphertext = cipher.encrypt(pad(plaintext.encode(), AES.block_size))
@@ -60,7 +59,6 @@ def encrypt_aes(plaintext, key):
 
 
 def decrypt_aes(ciphertext_b64, key):
-    """ Déchiffrer un message en utilisant AES """
     ciphertext = base64.b64decode(ciphertext_b64)
     
     iv = ciphertext[:AES.block_size]
@@ -68,6 +66,56 @@ def decrypt_aes(ciphertext_b64, key):
     decrypted = cipher.decrypt(ciphertext[AES.block_size:])
     plaintext = unpad(decrypted, AES.block_size)
     return plaintext.decode()
+
+# ****************************** DB ***************************************
+
+import sqlite3
+
+def init_db():
+    conn = sqlite3.connect('keys.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS keys (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sender TEXT NOT NULL,
+            receiver TEXT NOT NULL,
+            key TEXT NOT NULL,
+            UNIQUE(sender, receiver)
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+def store_key(sender, receiver, key):
+    conn = sqlite3.connect('keys.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO keys (sender, receiver, key) 
+            VALUES (?, ?, ?)
+        ''', (sender, receiver, key))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        cursor.execute('''
+            UPDATE keys 
+            SET key = ? 
+            WHERE sender = ? AND receiver = ?
+        ''', (key, sender, receiver))
+        conn.commit()
+    finally:
+        conn.close()
+        
+def get_key(sender, receiver):
+    conn = sqlite3.connect('keys.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT key FROM keys 
+        WHERE sender = ? AND receiver = ?
+    ''', (sender, receiver))
+    row = cursor.fetchone()
+    conn.close()
+    return row[0] if row else None
+
 
 
    
