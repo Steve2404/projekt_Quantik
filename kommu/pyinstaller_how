@@ -40,6 +40,7 @@ chmod +x dist/server_gui
 
 pyinstaller --onefile --windowed --add-data "/path/to/qiskit/qasm/libs:qiskit/qasm/libs" spion.py
 
-
+# cxfreeze:
+python setup.py build
 
 

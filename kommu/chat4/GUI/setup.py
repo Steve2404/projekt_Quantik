@@ -24,15 +24,14 @@ include_files = [
 build_exe_options = {
     'packages': packages,
     'include_files': include_files,
+    'includes':['tkinter'],
     'excludes': []
 }
 
 setup(
-    name="bb84",
+    name="middleman",
     version="0.1",
-    description="Quantum BB84 protocol implementation",
+    description="middleman programm",
     options={"build_exe": build_exe_options},
-    executables=[Executable("bb84.py")],
-    build_base="build_base", 
-    build_exe="build_exe"     
+    executables=[Executable("middleman.py")],     
 )
