@@ -18,7 +18,6 @@ from read_file import read_file
 path_name = "token.txt" # for executable programm
 
 token = read_file(path_name)
-#token = read_file("token.txt")
 
 
 def prepare_qubits(bits, bases, token):

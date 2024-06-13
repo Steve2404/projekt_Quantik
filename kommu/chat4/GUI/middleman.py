@@ -24,16 +24,10 @@ from function import *
 path_name = "token.txt" # for executable programm
 
 token = read_file(path_name)
-token = read_file(path_name)
 default_n_bits = 20
 HOST = "localhost"
 PORT = 6555
 client_name = 'Eve'
-
-
-def decode_message(data):
-    action, _, content = data.partition(b":")
-    return action.decode(), content.decode()
 
 
 class QuantumSpyClient(tk.Tk):
@@ -180,7 +174,22 @@ class QuantumSpyClient(tk.Tk):
                 self.sock.close()
                 self.sock = None
 
-
+    def on_closing(self):
+        if not messagebox.askokcancel("Quit", "Do you want to quit?"):
+            return
+        self.running = False
+        if self.sock:
+            try:
+                self.sock.shutdown(socket.SHUT_RDWR)
+                self.sock.close()
+            except OSError as e:
+                messagebox.showerror("Error", f"Failed to close socket: {e}")
+                
+        self.quit()
+        self.after(100, self.destroy)
+        
+        
 if __name__ == "__main__":
     app = QuantumSpyClient()
+    app.protocol("WM_DELETE_WINDOW", app.on_closing)
     app.mainloop()

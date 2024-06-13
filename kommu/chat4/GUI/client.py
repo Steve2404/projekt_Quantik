@@ -2,7 +2,6 @@ import socket
 import sys
 import threading
 import queue
-import time
 import tkinter as tk
 from tkinter import simpledialog, messagebox, scrolledtext
 from qiskit import QuantumCircuit
@@ -26,8 +25,6 @@ from bb84 import *
 path_name = "token.txt" # for executable programm
 
 token = read_file(path_name)
-#token = read_file("token.txt")
-
 default_n_bits = 20
 max_attempts = 3
 HOST = "localhost"
