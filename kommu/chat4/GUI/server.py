@@ -94,7 +94,6 @@ class QuantumChatServer(tk.Tk):
             try: 
                 server_socket.close()
             except OSError as e:
-                print(e)
                 messagebox.showerror("Error", 
                                  f"Error shutting down the socket: {e}")
             server_socket = None
@@ -263,13 +262,27 @@ class QuantumChatServer(tk.Tk):
                         .replace("<END>", ""))
                 break
 
-        if client_name and client_name in clients:
+        if client_name and client_name in clients: 
             clients.pop(client_name)
             self.display_message(
                 f"{client_name} disconnected.".replace("<END>", ""))
         sock.close()
 
-
+    def on_closing(self):
+        global server_socket
+        if not messagebox.askokcancel("Quit", "Do you want to quit?"):
+            return
+        if server_socket:
+            try:
+                server_socket.shutdown(socket.SHUT_RDWR)
+                server_socket.close()
+            except OSError as e:
+                messagebox.showerror("Error", f"Failed to close socket: {e}")
+                
+        self.quit()
+        self.after(100, self.destroy)
+    
 if __name__ == "__main__":
     app = QuantumChatServer()
+    app.protocol("WM_DELETE_WINDOW", app.on_closing)
     app.mainloop()

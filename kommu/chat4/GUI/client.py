@@ -815,7 +815,6 @@ class QuantumChatClient(tk.Tk):
             except OSError as e:
                 messagebox.showerror("Error", f"Failed to close socket: {e}")
                 
-        self.display_message(f"socket: {self.sock}")
         self.quit()
         self.after(100, self.destroy)
             
