@@ -8,8 +8,8 @@ from read_file import read_file
 
 
 # windows
-path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
-#path_name = "token/token.txt"
+#path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
+path_name = "token/token.txt"
 
 # ubuntu
 #path_name = "kommu/chat4/GUI/token.txt"

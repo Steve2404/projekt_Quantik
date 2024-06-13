@@ -1,8 +1,6 @@
 import socket
-import sys
 import threading
 import queue
-import time
 import tkinter as tk
 from tkinter import simpledialog, messagebox, scrolledtext
 from qiskit import QuantumCircuit
@@ -16,8 +14,8 @@ from read_file import read_file
 from bb84 import *
 
 # windows
-path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
-#path_name = "token/token.txt"
+#path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
+path_name = "token/token.txt"
 
 # ubuntu
 #path_name = "kommu/chat4/GUI/token.txt"
@@ -807,7 +805,6 @@ class QuantumChatClient(tk.Tk):
             except OSError as e:
                 messagebox.showerror("Error", f"Failed to close socket: {e}")
                 
-        self.display_message(f"socket: {self.sock}")
         self.quit()
         self.after(100, self.destroy)
             
