@@ -1,3 +1,4 @@
+import errno
 import socket
 import threading
 import tkinter as tk
@@ -15,24 +16,20 @@ from function import *
 # Configuration
 
 # windows
-#path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
-path_name = "token/token.txt"
+path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
+# path_name = "token.txt"
 
 # ubuntu
 #path_name = "kommu/chat4/GUI/token.txt"
 #token = read_file("token.txt")
 
-
+    
 token = read_file(path_name)
 default_n_bits = 20
 HOST = "localhost"
 PORT = 6555
 client_name = 'Eve'
 
-
-def decode_message(data):
-    action, _, content = data.partition(b":")
-    return action.decode(), content.decode()
 
 
 class QuantumSpyClient(tk.Tk):
@@ -110,14 +107,6 @@ class QuantumSpyClient(tk.Tk):
             self.display_message(f"Failed to connect: {e}")
             self.sock = None
 
-    def disconnect_from_server(self):
-        if self.sock:
-            # self.sock.shutdown(socket.SHUT_RDWR)
-            self.socket.close()
-            self.sock = None
-            self.connect_button.config(state='normal')
-            self.disconnect_button.config(state='disabled')
-            self.display_message("Disconnected from the server.")
 
     def clear_log(self):
         self.log_text.config(state='normal')
@@ -129,6 +118,7 @@ class QuantumSpyClient(tk.Tk):
         while self.sock:
             try:
                 if data := self.sock.recv(4096).decode():
+                    print(f"je suis la data: {data}")
                     buffer += data
                     while "<END>" in buffer:
                         message, buffer = buffer.split("<END>", 1)
@@ -136,7 +126,10 @@ class QuantumSpyClient(tk.Tk):
                 else:
                     self.display_message("Server closed the connection.")
                     break
+                     
             except Exception as e:
+                if e.errno == errno.EWOULDBLOCK:
+                    break 
                 messagebox.showerror("Error", f"Error receiving data: {e}")
                 break
         if self.sock:
@@ -179,8 +172,30 @@ class QuantumSpyClient(tk.Tk):
             if self.sock:
                 self.sock.close()
                 self.sock = None
+    
+    
+    def disconnect_from_server(self):
+        if self.sock:
+            self.sock.setblocking(False)
+            self.sock.shutdown(socket.SHUT_RDWR)
+            self.connect_button.config(state='normal')
+            self.disconnect_button.config(state='disabled')
+            self.display_message("Disconnected from the server.")  
+    
+    
+    def on_closing(self):
+        if not messagebox.askokcancel("Quit", "Do you want to quit?"):
+            return
+        if self.sock:
+            try:
+                self.sock.close()
+            except OSError as e:
+                messagebox.showerror("Error", f"Failed to close socket: {e}")     
+        self.quit()
+        self.after(100, self.destroy)
 
 
 if __name__ == "__main__":
     app = QuantumSpyClient()
+    app.protocol("WM_DELETE_WINDOW", app.on_closing)
     app.mainloop()

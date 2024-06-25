@@ -1,3 +1,4 @@
+import sys
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
 from qiskit_ibm_provider import IBMProvider
@@ -7,16 +8,28 @@ import matplotlib.pyplot as plt
 from read_file import read_file
 
 
+
+sys.stdout.reconfigure(encoding='utf-8')
+
+
+
 # windows
-#path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
-path_name = "token/token.txt"
+path_name = "Quantum/projekt_Quantik/kommu/chat4/GUI/token.txt"
+#path_name = "token.txt"
 
 # ubuntu
 #path_name = "kommu/chat4/GUI/token.txt"
-#token = read_file("token.txt")
 
 
 token = read_file(path_name)
+
+# IBM backend:
+#backend = "ibm_kyoto"
+#backend = "ibm_sherbrooke"
+
+# Simulator Backend:
+backend = "qasm_simulator"
+
 
 
 def prepare_qubits(bits, bases, token):
@@ -104,9 +117,8 @@ def qber_key(expeditor_key, receiver_key, choice_index, key):
     return True, qber_key, final_key
     #return True, qber_key
 
-#backend = "ibm_kyoto"
-backend = "qasm_simulator"
-#backend = "ibm_sherbrooke"
+
+
 def calcul(qc, backend=backend):
     # simulator_mps on IBM Server
     #provider = IBMProvider()

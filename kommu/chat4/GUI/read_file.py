@@ -4,8 +4,10 @@ import os
 def read_file(path_name):
     if getattr(sys, 'frozen', False):
         # Ran from a PyInstaller executable file
-        application_path = sys._MEIPASS
-        # application_path = os.path.dirname(sys.executable)
+        #application_path = sys._MEIPASS
+        
+        #Ran from a cx_Freeze executable file
+        application_path = os.path.dirname(sys.executable)
     else:
         application_path = os.path.abspath(".")
     
